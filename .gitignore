@@ -1,0 +1,15 @@
+.venv 
+.env
+__pycache__
+*.bib
+*.log
+log.html
+output.xml
+interactive_console_output.xml
+report.html
+*.png
+.DS_Store
+.DS_Store?
+geckodriver*
+selenium-screenshot*
+.coverage
