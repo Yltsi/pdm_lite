@@ -36,23 +36,27 @@ def logout():
     del session["username"]
     return redirect("/")
 
-@app.route("/register")
+@app.route("/register", methods=["GET", "POST"])
 def register():
-    return render_template("register.html")
-
-@app.route("/create", methods=["POST"])
-def create():
-    username = request.form["username"]
-    password1 = request.form["password1"]
-    password2 = request.form["password2"]
-    if password1 != password2:
-        return "VIRHE: salasanat eivät ole samat"
-    password_hash = generate_password_hash(password1)
-
-    try:
-        sql = "INSERT INTO users (username, password_hash) VALUES (?, ?)"
-        db.execute(sql, [username, password_hash])
-    except sqlite3.IntegrityError:
-        return "VIRHE: tunnus on jo varattu"
-
-    return "Tunnus luotu"
+    if request.method == "POST":
+        username = request.form["username"]
+        password1 = request.form["password1"]
+        password2 = request.form["password2"]
+        error_message = None
+        success_message = None
+        if len(password1) < 4:
+            error_message = "Password must be at least 4 characters long"
+        elif password1 != password2:
+            error_message = "Passwords do not match"
+        else:
+            password_hash = generate_password_hash(password1)
+            try:
+                sql = "INSERT INTO users (username, password_hash) VALUES (?, ?)"
+                db.execute(sql, [username, password_hash])
+                success_message = "Account created successfully"
+            except sqlite3.IntegrityError:
+                error_message = "Username is already in use"
+            
+        return render_template("register.html", error_message=error_message, success_message=success_message)
+    else:
+        return render_template("register.html")
