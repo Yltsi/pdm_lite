@@ -1,4 +1,5 @@
-.venv 
+.venv
+/venv
 .env
 __pycache__
 *.bib
@@ -7,7 +8,6 @@ log.html
 output.xml
 interactive_console_output.xml
 report.html
-*.png
 .DS_Store
 .DS_Store?
 geckodriver*
