@@ -30,6 +30,7 @@
       padding: 20px;
       border: 1px solid #ccc;
       border-radius: 5px;
+      text-align: center;
     }
 
     .form-group {
@@ -75,7 +76,7 @@
   <div class="banner">
     <img src="{{ url_for('static', filename='banner.png') }}" alt="PDM Lite Banner">
     <h1>PDM Lite</h1>
-    <p>Simple structures for simple products</p>
+    <p>Register below:</p>
   </div>
 
   {% if session.username %}
@@ -88,9 +89,7 @@
     </p>
   </div>
   {% else %}
-  <div class="register-options">
-    <p>Register below:</p>
-  </div>
+    <div class="login-form">  
     <form action="/create" method="post">
       <p>
         Username: <br />
@@ -104,7 +103,7 @@
         Password again: <br />
         <input type="password" name="password2" />
       </p>
-      <input type="submit" value="Luo tunnus" />
+      <input type="submit" value="Register" />
     </form>
   </div>
   <div class="auth-options">
