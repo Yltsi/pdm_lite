@@ -13,3 +13,4 @@ report.html
 geckodriver*
 selenium-screenshot*
 .coverage
+database.db

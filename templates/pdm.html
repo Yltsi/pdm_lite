@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PDM Lite - Main Program</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+        }
+
+        .banner {
+            text-align: center;
+            margin-bottom: 2em;
+        }
+        
+        .banner img {
+            max-width: 70%;
+            height: auto;
+        }
+
+        .tabs {
+            overflow: hidden;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .tab-button {
+            background-color: inherit;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+            font-size: 17px;
+            float: left;
+        }
+
+        .tab-button:hover {
+            background-color: #ddd;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-top: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="banner">
+        <img src="{{ url_for('static', filename='banner.png') }}" alt="PDM Lite Banner">
+        <h1>PDM Lite</h1>
+        <p>Simple structures for simple products</p>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-button active" onclick="openTab(event, 'Search')">Search</button>
+        <button class="tab-button" onclick="openTab(event, 'Add')">Add</button>
+    </div>
+
+    <div id="Search" class="tab-content active">
+        <h3>Search</h3>
+        <p>Content for the Search tab will go here.</p>
+    </div>
+
+    <div id="Add" class="tab-content">
+        <h3>Add</h3>
+        <p>Content for the Add tab will go here.</p>
+    </div>
+
+    <script>
+        function openTab(evt, tabName) {
+            var i, tabContent, tabButtons;
+            tabContent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabContent.length; i++) {
+                tabContent[i].classList.remove("active");
+            }
+            tabButtons = document.getElementsByClassName("tab-button");
+            for (i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].classList.remove("active");
+            }
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+    </script>
+</body>
+</html>

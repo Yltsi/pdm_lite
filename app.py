@@ -25,6 +25,7 @@ def index():
             password_hash = password_hash[0][0]
             if check_password_hash(password_hash, password):
                 session["username"] = username
+                return redirect("/pdm")
             else:
                 error_message = "Invalid username or password"
 
@@ -61,3 +62,10 @@ def register():
         return render_template("register.html", error_message=error_message, success_message=success_message)
     else:
         return render_template("register.html")
+    
+@app.route("/pdm")
+def pdm():
+    if not session.get("username"):
+        return redirect("/")
+    else:
+        return render_template("pdm.html")
