@@ -8,28 +8,27 @@ import db
 app = Flask(__name__)
 app.secret_key = config.secret_key
 
-@app.route("/")
+@app.route("/", methods = ["GET", "POST"])
 def index():
-    return render_template("index.html")
+    error_message = None
 
-@app.route("/login", methods=["POST"])
-def login():
-    username = request.form["username"]
-    password = request.form["password"]
-    
-    sql = "SELECT password_hash FROM users WHERE username = ?"
-    password_hash = db.query(sql, [username])
-    
-    if not password_hash:
-        return render_template("index.html", error_message="Invalid username or password")
-    
-    password_hash = password_hash[0][0]
-    
-    if check_password_hash(password_hash, password):
-        session["username"] = username
-        return redirect("/")
-    else:
-        return render_template("index.html", error_message="Invalid username or password")
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+
+        sql = "SELECT password_hash FROM users WHERE username = ?"
+        password_hash = db.query(sql, [username])
+        
+        if not password_hash:
+            error_message = "Invalid username or password"
+        else:
+            password_hash = password_hash[0][0]
+            if check_password_hash(password_hash, password):
+                session["username"] = username
+            else:
+                error_message = "Invalid username or password"
+
+    return render_template("index.html", error_message=error_message)
 
 @app.route("/logout")
 def logout():
@@ -48,6 +47,8 @@ def register():
             error_message = "Password must be at least 4 characters long"
         elif password1 != password2:
             error_message = "Passwords do not match"
+        elif len(username) < 4:
+            error_message = "Username must be at least 4 characters long"
         else:
             password_hash = generate_password_hash(password1)
             try:
