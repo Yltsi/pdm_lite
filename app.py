@@ -1,6 +1,5 @@
 import sqlite3
-from flask import Flask
-from flask import redirect, render_template, request, session
+from flask import Flask, redirect, render_template, request, session, flash
 from werkzeug.security import check_password_hash, generate_password_hash
 import config
 import db
@@ -68,4 +67,114 @@ def pdm():
     if not session.get("username"):
         return redirect("/")
     else:
-        return render_template("pdm.html")
+        all_items = db.get_all_items()
+        return render_template("pdm.html", search_results=all_items, search_performed=True)
+    
+@app.route("/add_item", methods=["POST"])
+def add_item():
+    if request.method == "POST":
+        print("Request Form Data:", request.form)
+        item_type = request.form["item_type"]
+        description = request.form["description"]
+        revision = request.form["revision"]
+
+        if not item_type or not description or not revision:
+            flash("All fields are required", "error")
+            return redirect("/pdm")
+        item_number = db.add_item_base(item_type, description, revision)
+
+        if item_number:
+            if item_type == "Manufactured Part":
+                material = request.form.get("material")
+                if material:
+                    if db.add_manufactured_parts_details(item_number, description, material, revision):
+                        flash(f"{item_type} \"{description}\" (Item Number: {item_number}) added successfully!", "success")
+                    else:
+                        flash(f"Error adding details for Manufactured Part (Item Number: {item_number}).", "error")
+                else:
+                    flash(f"{item_type} \"{description}\" (Item Number: {item_number}) added successfully (without material).", "success")
+
+            elif item_type == "Fixed Part":
+                vendor = request.form.get("vendor")
+                vendor_part_number = request.form.get("vendor_part_number")
+                if vendor and vendor_part_number:
+                    if db.add_fixed_part_details(item_number, description, vendor, vendor_part_number, revision):
+                        flash(f"{item_type} \"{description}\" (Item Number: {item_number}) added successfully!", "success")
+                    else:
+                        flash(f"Error adding details for Fixed Part (Item Number: {item_number}).", "error")
+                else:
+                    flash(f"Vendor and Vendor Part Number are required for Fixed Parts. Base item added with Item Number: {item_number}, but details not saved.", "warning")
+
+            elif item_type == "Assembly":
+                flash(f"{item_type} \"{description}\" (Item Number: {item_number}) added successfully!", "success")
+            else:
+                flash("Invalid Item Type.", "error")
+
+        else:
+            flash("Error adding base item. Please check logs.", "error")
+
+        return redirect("/pdm")
+    
+@app.route("/search_items", methods=["POST"])
+def search_items():
+    if "username" in session:
+        search_description = request.form.get("search_description", "")
+        item_filter = request.form.get("item_filter", "All")
+        search_results = db.search_items_db(search_description, item_filter)
+        return render_template("pdm.html", search_results=search_results, search_performed=True)
+    else:
+        return redirect("/")
+    
+@app.route("/edit_item/<int:item_number>")
+def edit_item(item_number):
+    if "username" in session:
+        item = db.get_item_by_number(item_number)
+        if not item:
+            flash("Item not found", "error")
+            return redirect("/pdm")
+
+        manufactured_part = None
+        fixed_part = None
+
+        if item["item_type"] == "Manufactured Part":
+            manufactured_part = db.get_manufactured_part_details(item_number)
+        elif item["item_type"] == "Fixed Part":
+            fixed_part = db.get_fixed_part_details(item_number)
+
+        return render_template("edit_item.html", item=item, manufactured_part=manufactured_part, fixed_part=fixed_part)
+    else:
+        return redirect("/")
+
+@app.route("/update_item/<int:item_number>", methods=["POST"])
+def update_item(item_number):
+    if "username" in session:
+        item_type = request.form["item_type"]
+        description = request.form["description"]
+        revision = request.form["revision"]
+
+        if db.update_item_base(item_number, item_type, description, revision):
+            if item_type == "Manufactured Part":
+                material = request.form["material"]
+                db.update_manufactured_parts_details(item_number, description, material, revision)
+            elif item_type == "Fixed Part":
+                vendor = request.form["vendor"]
+                vendor_part_number = request.form["vendor_part_number"]
+                db.update_fixed_part_details(item_number, description, vendor, vendor_part_number, revision)
+            flash(f"{item_type} \"{description}\" (Item Number: {item_number}) updated successfully!", "success")
+            return redirect("/pdm")
+        else:
+            flash("Error updating item. Please check logs.", "error")
+            return redirect("/edit_item", item_number=item_number)
+    else:
+        return redirect("/")
+
+@app.route("/delete_item/<int:item_number>", methods=["POST"])
+def delete_item(item_number):
+    if "username" in session:
+        if db.delete_item_by_number(item_number):
+            flash(f"Item Number {item_number} deleted successfully!", "success")
+        else:
+            flash(f"Error deleting Item Number {item_number}. Please check logs.", "error")
+    else:
+        return redirect("/")
+    return redirect("/pdm")

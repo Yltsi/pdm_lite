@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Item - PDM Lite</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+        }
+        .banner {
+            text-align: center;
+            margin-bottom: 2em;
+        }
+        .banner img {
+            max-width: 70%;
+            height: auto;
+        }
+
+        ul.flashes {
+            list-style: none;
+            padding: 0;
+        }
+
+        ul.flashes li {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        ul.flashes li.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        ul.flashes li.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="banner">
+        <img src="{{ url_for('static', filename='banner.png') }}" alt="PDM Lite Banner">
+        <h1>PDM Lite - Edit Item</h1>
+        <p>User: {{ session.username }}</p>
+        <p><a href="/logout">Logout</a></p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul class="flashes">
+      {% for category, message in messages %}
+        <li class="{{ category }}">{{ message }}</li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+    {% endwith %}
+
+    <h2>Edit Item #{{ item.item_number }}</h2>
+
+    <form id="edititemform" action="/update_item/{{ item.item_number }}" method="POST">
+        <label for="item_type">Item Type:</label>
+        <select id="item_type" name="item_type" onchange="showItemFields()" {% if item.item_type != None %} {% endif %}>
+            <option value="Manufactured Part" {% if item.item_type == 'Manufactured Part' %}selected{% endif %}>Manufactured Part</option>
+            <option value="Fixed Part" {% if item.item_type == 'Fixed Part' %}selected{% endif %}>Fixed Part</option>
+            <option value="Assembly" {% if item.item_type == 'Assembly' %}selected{% endif %}>Assembly</option>
+        </select><br><br>
+
+        <label for="description">Description:</label>
+        <textarea id="description" name="description">{{ item.description }}</textarea><br><br>
+
+        <label for="revision">Revision:</label>
+        <input type="text" id="revision" name="revision" value="{{ item.revision }}"><br><br>
+
+        <div id="manufacturedPartFields" style="display:none;">
+            <h4>Manufactured Part Details</h4>
+            <label for="material">Material:</label>
+            <input type="text" id="material" name="material" value="{{ manufactured_part.material if manufactured_part else '' }}"><br><br>
+        </div>
+
+        <div id="fixedPartFields" style="display:none;">
+            <h4>Fixed Part Details</h4>
+            <label for="vendor">Vendor:</label>
+            <input type="text" id="vendor" name="vendor" value="{{ fixed_part.vendor if fixed_part else '' }}"><br><br>
+            <label for="vendor_part_number">Vendor Part Number:</label>
+            <input type="text" id="vendor_part_number" name="vendor_part_number" value="{{ fixed_part.vendor_part_number if fixed_part else '' }}"><br><br>
+        </div>
+
+        <button type="submit">Update Item</button>
+    </form>
+
+    <script>
+        function showItemFields() {
+            var itemType = document.getElementById("item_type").value;
+            var manufacturedPartFields = document.getElementById("manufacturedPartFields");
+            var fixedPartFields = document.getElementById("fixedPartFields");
+
+            manufacturedPartFields.style.display = "none";
+            fixedPartFields.style.display = "none";
+
+            if (itemType === "Manufactured Part") {
+                manufacturedPartFields.style.display = "block";
+            } else if (itemType === "Fixed Part") {
+                fixedPartFields.style.display = "block";
+            }
+        }
+        window.onload = showItemFields;
+        showItemFields();
+    </script>
+</body>
+</html>
