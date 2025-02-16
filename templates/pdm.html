@@ -118,7 +118,7 @@
 
     <div id="SearchTab" class="tab-content {% if active_tab == 'search' %}active{% else %}hidden{% endif %}">
         <h3>Search Items</h3>
-        <form id="searchform" action="/search_items" method="POST">
+        <form id="searchform" action="/pdm" method="POST">
             <label for="item_filter">Filter by Item Type:</label>
             <select id="item_filter" name="item_filter">
                 <option value="All">All</option>
@@ -144,6 +144,7 @@
                             <th>Description</th>
                             <th>Revision</th>
                             <th>Creator</th>
+                            <th>Revisioner</th>
                             <th>Edit</th>
                             <th>Delete</th>
                         </tr>
@@ -156,6 +157,7 @@
                                 <td>{{ item.description }}</td>
                                 <td>{{ item.revision }}</td>
                                 <td>{{ item.creator }}</td>
+                                <td>{{ item.revisioner }}</td>
                                 <td><a href="/edit_item/{{ item.item_number }}">Edit</a></td>
                                 <td>
                                     <form action="/delete_item/{{ item.item_number }}" method="POST" style="display:inline;">
@@ -187,7 +189,7 @@
             <textarea id="description" name="description"></textarea><br><br>
 
             <label for="revision">Revision:</label>
-            <input type="text" id="revision" name="revision" value="A"><br><br>
+            <input type="text" id="revision" name="revision" value="1"><br><br>
 
             {% if request.form.get('item_type') == 'Manufactured Part' or 'item_type' not in request.form %}
             <div id="manufacturedPartFields">

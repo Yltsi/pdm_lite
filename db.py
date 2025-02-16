@@ -51,7 +51,7 @@ def get_item_by_number(item_number):
     return None
 
 def search_items_db(search_description, item_filter):
-    sql = "SELECT item_number, item_type, description, revision FROM items WHERE 1=1"
+    sql = "SELECT item_number, item_type, description, revision, creator, revisioner FROM items WHERE 1=1"
     par = []
 
     if item_filter != "All":
@@ -177,7 +177,7 @@ def delete_item_by_number(item_number):
         return False
     
 def get_items():
-    sql = "SELECT item_number, item_type, description, revision, creator FROM items ORDER BY item_number"
+    sql = "SELECT item_number, item_type, description, revision, creator, revisioner FROM items ORDER BY item_number"
     items = query(sql)
     return items
 

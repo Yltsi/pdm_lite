@@ -62,16 +62,28 @@ def register():
     else:
         return render_template("register.html")
     
-@app.route("/pdm")
+@app.route("/pdm", methods=["GET", "POST"])
 def pdm():
     if "username" in session:
         username = session["username"]
-        items = db.get_items()
+        active_tab = request.args.get('tab', 'search')
+
+        if request.method == "POST":
+            search_description = request.form.get("search_description")
+            item_filter = request.form.get("item_filter")
+
+            items_rows = db.search_items_db(search_description, item_filter)
+            items = []
+            for row in items_rows:
+                item_dict = dict(row)
+                items.append(item_dict)
+        else:
+            items = db.get_items()
+
         assemblies = db.get_assemblies()
         manufactured_parts = db.get_manufactured_parts()
         fixed_parts = db.get_fixed_parts()
 
-        active_tab = request.args.get('tab', 'search')
 
         return render_template(
             "pdm.html",
