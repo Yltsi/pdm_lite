@@ -74,6 +74,11 @@
         <label for="revision">Revision:</label>
         <input type="text" id="revision" name="revision" value="{{ item.revision }}"><br><br>
 
+        <div>
+            <p>Creator: {{ item.creator }}</p>
+            <p>Revisioner: {{ item.revisioner }}</p>
+        </div>
+
         <div id="manufacturedPartFields" style="display:none;">
             <h4>Manufactured Part Details</h4>
             <label for="material">Material:</label>

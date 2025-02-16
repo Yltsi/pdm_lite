@@ -23,9 +23,9 @@ def query(sql, params=[]):
     con.close()
     return result
 
-def add_item_base(item_type, description, revision="A"):
-    sql = "insert into items (item_type, description, revision) values (?, ?, ?)"
-    par = [item_type, description, revision]
+def add_item_base(item_type, description, revision, creator):
+    sql = "insert into items (item_type, description, revision, creator) values (?, ?, ?, ?)"
+    par = [item_type, description, revision, creator]
     execute(sql, par)
     item_number = last_insert_id()
     return item_number
@@ -89,9 +89,9 @@ def get_fixed_part_details(item_number):
         return result[0]
     return None
 
-def update_item_base(item_number, item_type, description, revision):
-    sql = "UPDATE items SET item_type = ?, description = ?, revision = ? WHERE item_number = ?"
-    par = [item_type, description, revision, item_number]
+def update_item_base(item_number, item_type, description, revision, revisioner):
+    sql = "UPDATE items SET item_type = ?, description = ?, revision = ?, revisioner = ? WHERE item_number = ?"
+    par = [item_type, description, revision, revisioner, item_number]
     execute(sql, par)
     return True
 

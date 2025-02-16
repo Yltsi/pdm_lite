@@ -73,6 +73,7 @@ def pdm():
 @app.route("/add_item", methods=["POST"])
 def add_item():
     if request.method == "POST":
+        username = session["username"]
         print("Request Form Data:", request.form)
         item_type = request.form["item_type"]
         description = request.form["description"]
@@ -81,7 +82,7 @@ def add_item():
         if not item_type or not description or not revision:
             flash("All fields are required", "error")
             return redirect("/pdm")
-        item_number = db.add_item_base(item_type, description, revision)
+        item_number = db.add_item_base(item_type, description, revision, username)
 
         if item_number:
             if item_type == "Manufactured Part":
@@ -148,11 +149,12 @@ def edit_item(item_number):
 @app.route("/update_item/<int:item_number>", methods=["POST"])
 def update_item(item_number):
     if "username" in session:
+        username = session["username"]
         item_type = request.form["item_type"]
         description = request.form["description"]
         revision = request.form["revision"]
 
-        if db.update_item_base(item_number, item_type, description, revision):
+        if db.update_item_base(item_number, item_type, description, revision, username):
             if item_type == "Manufactured Part":
                 material = request.form["material"]
                 db.update_manufactured_parts_details(item_number, description, material, revision)

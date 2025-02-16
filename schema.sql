@@ -1,3 +1,9 @@
+DROP TABLE IF EXISTS assemblies;
+DROP TABLE IF EXISTS manufactured_parts;
+DROP TABLE IF EXISTS fixed_parts;
+DROP TABLE IF EXISTS items;
+DROP TABLE IF EXISTS users;
+
 CREATE TABLE users (
     id INTEGER PRIMARY KEY,
     username TEXT UNIQUE,
@@ -9,7 +15,9 @@ CREATE TABLE IF NOT EXISTS items (
     item_type TEXT NOT NULL,
     description TEXT,
     revision TEXT DEFAULT 'A',
-    creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    creator TEXT,
+    revisioner TEXT
 );
 
 CREATE TABLE IF NOT EXISTS manufactured_parts (
