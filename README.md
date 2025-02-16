@@ -42,9 +42,12 @@ $ flask run
 * Kirjautumistiedoilla on omat vaatimuksensa ja virhetilanteessa virheviesti kertoo mikä on vikana tunnuksien luonnissa.
 * Kirjautumissivusto kertoo, mikäli käyttäjä yrittää kirjautua väärillä tunnuksilla.
 * Seuraavat sivut ovat käytössä, http://127.0.0.1:5000/ /pdm /register
-* Sivusto ohjaa virheellisesti /edit_item/*osanumero* Periaatteessa käyttäjä voi mennä tällä hetkellä esimerkiksi osoitteeseen /edit_item/1 muokatakseen kyseistä nimikettä tietokannassa. Muutenkin muutama redirect komento app.py:ssä toimii huonolla logiikalla. Näitä korjataan seuraavissa päivityksissä.
+* Sivusto ohjaa virheellisesti /edit_item/*osanumero* Periaatteessa käyttäjä voi mennä tällä hetkellä esimerkiksi osoitteeseen /edit_item/1 muokatakseen kyseistä nimikettä tietokannassa.
 * Käyttäjä näkee kaikki nimikkeet search välilehdellä osoitteessa /pdm
 * Flash virhe/onnistumisviestit näkyvät search ja add välilehdellä. Tässä on hieman virheitä
 * Käyttäjä pystyy tällä hetkellä hakemaan tietokannan nimikkeitä description nimikkeen mukaan.
 * Käyttäjä voi hakea nimikkeitä tyypin mukaan.
 * Tietokanta numeroi jokaisen osan/kokoonpanon automaattisesti.
+* Käyttäjä pystyy muokkaamaan nimikkeitä, revisioinnissa näkyy alkuperäinen tekijä ja revision tekijä
+* Käyttäjä näkee lisäämänsä nimikkeet
+* Tietokanta tallentaa vanhat revisiot omaan taulukkoonsa, näitä ei vielä näe itse ohjelmassa
