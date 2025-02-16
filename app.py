@@ -64,11 +64,26 @@ def register():
     
 @app.route("/pdm")
 def pdm():
-    if not session.get("username"):
-        return redirect("/")
+    if "username" in session:
+        username = session["username"]
+        items = db.get_items()
+        assemblies = db.get_assemblies()
+        manufactured_parts = db.get_manufactured_parts()
+        fixed_parts = db.get_fixed_parts()
+
+        active_tab = request.args.get('tab', 'search')
+
+        return render_template(
+            "pdm.html",
+            username=username,
+            items=items,
+            assemblies=assemblies,
+            manufactured_parts=manufactured_parts,
+            fixed_parts=fixed_parts,
+            active_tab=active_tab
+        )
     else:
-        all_items = db.get_all_items()
-        return render_template("pdm.html", search_results=all_items, search_performed=True)
+        return redirect("/")
     
 @app.route("/add_item", methods=["POST"])
 def add_item():
@@ -150,23 +165,33 @@ def edit_item(item_number):
 def update_item(item_number):
     if "username" in session:
         username = session["username"]
-        item_type = request.form["item_type"]
         description = request.form["description"]
-        revision = request.form["revision"]
 
-        if db.update_item_base(item_number, item_type, description, revision, username):
+        item = db.get_item_by_number(item_number)
+        if not item:
+            flash("Item not found", "error")
+            return redirect("/pdm")
+        item_type = item["item_type"]
+
+        current_revision = item["revision"]
+        try:
+            new_revision = int(current_revision) + 1
+        except ValueError:
+            new_revision = 1
+
+        if db.update_item_base(item_number, item_type, description, str(new_revision), username):
             if item_type == "Manufactured Part":
                 material = request.form["material"]
-                db.update_manufactured_parts_details(item_number, description, material, revision)
+                db.update_manufactured_parts_details(item_number, description, material, str(new_revision))
             elif item_type == "Fixed Part":
                 vendor = request.form["vendor"]
                 vendor_part_number = request.form["vendor_part_number"]
-                db.update_fixed_part_details(item_number, description, vendor, vendor_part_number, revision)
-            flash(f"{item_type} \"{description}\" (Item Number: {item_number}) updated successfully!", "success")
+                db.update_fixed_parts_details(item_number, description, vendor, vendor_part_number, str(new_revision))
+            flash(f"{item_type} \"{description}\" (Item Number: {item_number}) updated to revision {new_revision}!", "success")
             return redirect("/pdm")
         else:
             flash("Error updating item. Please check logs.", "error")
-            return redirect("/edit_item", item_number=item_number)
+            return redirect(f"/edit_item/{item_number}")
     else:
         return redirect("/")
 

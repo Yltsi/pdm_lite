@@ -89,23 +89,82 @@ def get_fixed_part_details(item_number):
         return result[0]
     return None
 
-def update_item_base(item_number, item_type, description, revision, revisioner):
-    sql = "UPDATE items SET item_type = ?, description = ?, revision = ?, revisioner = ? WHERE item_number = ?"
-    par = [item_type, description, revision, revisioner, item_number]
-    execute(sql, par)
-    return True
+def update_item_base(item_number, item_type, description, revision, username):
+    """Updates item base details and saves old revision to item_revisions."""
+    try:
+        con = get_connection()
+        cursor = con.cursor()
+
+        current_item = get_item_by_number(item_number)
+        if not current_item:
+            return False
+
+        manufactured_part_details = None
+        fixed_part_details = None
+        if item_type == "Manufactured Part":
+            manufactured_part_details = get_manufactured_part_details(item_number)
+        elif item_type == "Fixed Part":
+            fixed_part_details = get_fixed_part_details(item_number)
+
+        sql_insert_revision = """
+            INSERT INTO item_revisions (item_number, revision_number, revisioner, item_type, description, material, vendor, vendor_part_number)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """
+        cursor.execute(sql_insert_revision, (
+            item_number,
+            current_item['revision'],
+            username,
+            current_item['item_type'],
+            current_item['description'],
+            manufactured_part_details['material'] if manufactured_part_details else None,
+            fixed_part_details['vendor'] if fixed_part_details else None,
+            fixed_part_details['vendor_part_number'] if fixed_part_details else None
+        ))
+
+        sql_update_item = "UPDATE items SET description=?, revision=?, revisioner=? WHERE item_number=?"
+        cursor.execute(sql_update_item, (description, revision, username, item_number))
+
+        con.commit()
+        con.close()
+        return True
+    except Exception as e:
+        print(f"Error updating item base in database: {e}")
+        if con:
+            con.rollback()
+            con.close()
+        return False
 
 def update_manufactured_parts_details(item_number, description, material, revision):
-    sql = "UPDATE manufactured_parts SET description = ?, material = ?, revision = ? WHERE item_number = ?"
-    par = [description, material, revision, item_number]
-    execute(sql, par)
-    return True
+    try:
+        con = get_connection()
+        cursor = con.cursor()
+        sql = "UPDATE manufactured_parts SET description=?, material=? WHERE item_number=?"
+        cursor.execute(sql, (description, material, item_number))
+        con.commit()
+        con.close()
+        return True
+    except Exception as e:
+        print(f"Error updating manufactured part details in database: {e}")
+        if con:
+            con.rollback()
+            con.close()
+        return False
 
-def update_fixed_part_details(item_number, description, vendor, vendor_part_number, revision):
-    sql = "UPDATE fixed_parts SET description = ?, vendor = ?, vendor_part_number = ?, revision = ? WHERE item_number = ?"
-    par = [description, vendor, vendor_part_number, revision, item_number]
-    execute(sql, par)
-    return True
+def update_fixed_parts_details(item_number, description, vendor, vendor_part_number, revision):
+    try:
+        con = get_connection()
+        cursor = con.cursor()
+        sql = "UPDATE fixed_parts SET description=?, vendor=?, vendor_part_number=? WHERE item_number=?"
+        cursor.execute(sql, (description, vendor, vendor_part_number, item_number))
+        con.commit()
+        con.close()
+        return True
+    except Exception as e:
+        print(f"Error updating fixed part details in database: {e}")
+        if con:
+            con.rollback()
+            con.close()
+        return False
 
 def delete_item_by_number(item_number):
     sql = "DELETE FROM items WHERE item_number = ?"
@@ -116,3 +175,21 @@ def delete_item_by_number(item_number):
     except sqlite3.Error as e:
         print(f"Database error during delete: {e}")
         return False
+    
+def get_items():
+    sql = "SELECT item_number, item_type, description, revision, creator FROM items ORDER BY item_number"
+    items = query(sql)
+    return items
+
+def get_assemblies():
+    return []
+
+def get_manufactured_parts():
+    sql = "SELECT * FROM manufactured_parts"
+    manufactured_parts = query(sql)
+    return manufactured_parts
+
+def get_fixed_parts():
+    sql = "SELECT * FROM fixed_parts"
+    fixed_parts = query(sql)
+    return fixed_parts

@@ -72,6 +72,25 @@
             border: 1px solid #f5c6cb;
         }
 
+        .tab-content {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-top: none;
+        }
+
+        .tab-content.hidden {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .tab-button.active {
+            background-color: #ddd;
+            border-bottom: 2px solid #ddd;
+        }
+
     </style>
 </head>
 <body>
@@ -93,11 +112,11 @@
     {% endwith %}
 
     <div class="tabs">
-        <button class="tab-button active" onclick="openTab(event, 'Search')">Search</button>
-        <button class="tab-button" onclick="openTab(event, 'Add')">Add</button>
+        <a href="/pdm?tab=search" class="tab-button {% if active_tab == 'search' %}active{% endif %}">Search</a>
+        <a href="/pdm?tab=add" class="tab-button {% if active_tab == 'add' %}active{% endif %}">Add</a>
     </div>
 
-    <div id="Search" class="tab-content active">
+    <div id="SearchTab" class="tab-content {% if active_tab == 'search' %}active{% else %}hidden{% endif %}">
         <h3>Search Items</h3>
         <form id="searchform" action="/search_items" method="POST">
             <label for="item_filter">Filter by Item Type:</label>
@@ -115,7 +134,7 @@
         </form>
 
         <div id="search_results">
-            {% if search_results %}
+            {% if items %}
                 <h4>Search Results:</h4>
                 <table class="search-results-table">
                     <thead>
@@ -125,20 +144,18 @@
                             <th>Description</th>
                             <th>Revision</th>
                             <th>Creator</th>
-                            <th>Revisioner</th>
                             <th>Edit</th>
                             <th>Delete</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for item in search_results %}
+                        {% for item in items %}
                             <tr>
                                 <td>{{ item.item_number }}</td>
                                 <td>{{ item.item_type }}</td>
                                 <td>{{ item.description }}</td>
                                 <td>{{ item.revision }}</td>
                                 <td>{{ item.creator }}</td>
-                                <td>{{ item.revisioner }}</td>
                                 <td><a href="/edit_item/{{ item.item_number }}">Edit</a></td>
                                 <td>
                                     <form action="/delete_item/{{ item.item_number }}" method="POST" style="display:inline;">
@@ -150,13 +167,13 @@
                     </tbody>
                 </table>
             {% endif %}
-            {% if not search_results and search_performed %}
+            {% if not items and search_performed %}
                 <p>No items found matching your search criteria.</p>
             {% endif %}
         </div>
     </div>
 
-    <div id="Add" class="tab-content">
+    <div id="AddTab" class="tab-content {% if active_tab == 'add' %}active{% else %}hidden{% endif %}">
         <h3>Add new item</h3>
         <form id="additemform" action="/add_item" method="POST">
             <label for="item_type">Item Type:</label>
