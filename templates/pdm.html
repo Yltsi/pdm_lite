@@ -172,56 +172,28 @@
             <label for="revision">Revision:</label>
             <input type="text" id="revision" name="revision" value="A"><br><br>
 
-            <div id="manufacturedPartFields" style="display:none;">
+            {% if request.form.get('item_type') == 'Manufactured Part' or 'item_type' not in request.form %}
+            <div id="manufacturedPartFields">
                 <h4>Manufactured Part Details</h4>
                 <label for="material">Material:</label>
                 <input type="text" id="material" name="material"><br><br>
             </div>
+            {% endif %}
 
-            <div id="fixedPartFields" style="display:none;">
+            {% if request.form.get('item_type') == 'Fixed Part' or 'item_type' not in request.form %}
+            <div id="fixedPartFields">
                 <h4>Fixed Part Details</h4>
                 <label for="vendor">Vendor:</label>
                 <input type="text" id="vendor" name="vendor"><br><br>
                 <label for="vendor_part_number">Vendor Part Number:</label>
                 <input type="text" id="vendor_part_number" name="vendor_part_number"><br><br>
             </div>
-
+            {% endif %}
             <button type="submit">Add Item</button>
         </form>
             
 
     </div>
 
-    <script>
-        function openTab(evt, tabName) {
-            var i, tabContent, tabButtons;
-            tabContent = document.getElementsByClassName("tab-content");
-            for (i = 0; i < tabContent.length; i++) {
-                tabContent[i].classList.remove("active");
-            }
-            tabButtons = document.getElementsByClassName("tab-button");
-            for (i = 0; i < tabButtons.length; i++) {
-                tabButtons[i].classList.remove("active");
-            }
-            document.getElementById(tabName).classList.add("active");
-            evt.currentTarget.classList.add("active");
-        }
-
-        function showItemFields() {
-            var itemType = document.getElementById("item_type").value;
-            var manufacturedPartFields = document.getElementById("manufacturedPartFields");
-            var fixedPartFields = document.getElementById("fixedPartFields");
-
-            manufacturedPartFields.style.display = "none";
-            fixedPartFields.style.display = "none";
-
-            if (itemType === "Manufactured Part") {
-                manufacturedPartFields.style.display = "block";
-            } else if (itemType === "Fixed Part") {
-                fixedPartFields.style.display = "block";
-            }
-        }
-        window.onload = showItemFields;
-    </script>
 </body>
 </html>

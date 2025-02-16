@@ -79,40 +79,25 @@
             <p>Revisioner: {{ item.revisioner }}</p>
         </div>
 
-        <div id="manufacturedPartFields" style="display:none;">
-            <h4>Manufactured Part Details</h4>
+        {% if item.item_type == 'Manufactured Part' %}
+        <div id="manufacturedPartFields">
             <label for="material">Material:</label>
             <input type="text" id="material" name="material" value="{{ manufactured_part.material if manufactured_part else '' }}"><br><br>
         </div>
+        {% endif %}
 
-        <div id="fixedPartFields" style="display:none;">
+        {% if item.item_type == 'Fixed Part' %}
+        <div id="fixedPartFields">
             <h4>Fixed Part Details</h4>
             <label for="vendor">Vendor:</label>
             <input type="text" id="vendor" name="vendor" value="{{ fixed_part.vendor if fixed_part else '' }}"><br><br>
             <label for="vendor_part_number">Vendor Part Number:</label>
             <input type="text" id="vendor_part_number" name="vendor_part_number" value="{{ fixed_part.vendor_part_number if fixed_part else '' }}"><br><br>
         </div>
+        {% endif %}
 
         <button type="submit">Update Item</button>
     </form>
 
-    <script>
-        function showItemFields() {
-            var itemType = document.getElementById("item_type").value;
-            var manufacturedPartFields = document.getElementById("manufacturedPartFields");
-            var fixedPartFields = document.getElementById("fixedPartFields");
-
-            manufacturedPartFields.style.display = "none";
-            fixedPartFields.style.display = "none";
-
-            if (itemType === "Manufactured Part") {
-                manufacturedPartFields.style.display = "block";
-            } else if (itemType === "Fixed Part") {
-                fixedPartFields.style.display = "block";
-            }
-        }
-        window.onload = showItemFields;
-        showItemFields();
-    </script>
 </body>
 </html>
