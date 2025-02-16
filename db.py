@@ -42,6 +42,40 @@ def add_fixed_part_details(item_number, description, vendor, vendor_part_number,
     execute(sql, par)
     return True
 
+def add_manufactured_part(description, revision, creator, material):
+    """Adds a new manufactured part to the database."""
+    try:
+        item_number = add_item_base("Manufactured Part", description, revision, creator)
+        if item_number:
+            return add_manufactured_parts_details(item_number, description, material, revision)
+        return False
+    except Exception as e:
+        print(f"Error adding manufactured part to database: {e}")
+        return False
+
+def add_fixed_part(description, revision, creator, vendor, vendor_part_number):
+    """Adds a new fixed part to the database."""
+    try:
+        item_number = add_item_base("Fixed Part", description, revision, creator)
+        if item_number:
+            return add_fixed_part_details(item_number, description, vendor, vendor_part_number, revision)
+        return False
+    except Exception as e:
+        print(f"Error adding fixed part to database: {e}")
+        return False
+
+def add_assembly(description, revision, creator):
+    """Adds a new assembly to the database."""
+    try:
+        item_number = add_item_base("Assembly", description, revision, creator)
+        if item_number:
+            # Bom taulu tänne
+            return True
+        return False
+    except Exception as e:
+        print(f"Error adding assembly to database: {e}")
+        return False
+
 def get_item_by_number(item_number):
     sql = "select * from items where item_number = ?"
     par = [item_number]
@@ -68,7 +102,7 @@ def search_items_db(search_description, item_filter):
     return results
 
 def get_all_items():
-    sql = "SELECT item_number, item_type, description, revision FROM items ORDER BY item_number"
+    sql = "SELECT item_number, item_type, description, revision, creator, revisioner FROM items ORDER BY item_number"
     items = query(sql)
     print("get_all_items_ordered_by_number items:", items)
     return items
@@ -193,3 +227,10 @@ def get_fixed_parts():
     sql = "SELECT * FROM fixed_parts"
     fixed_parts = query(sql)
     return fixed_parts
+
+def get_items_by_user(username):
+    sql = "SELECT item_number, item_type, description, revision, creator, revisioner FROM items WHERE creator = ? OR revisioner = ? ORDER BY item_number"
+    items = query(sql, [username, username])
+    return items
+
+

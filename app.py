@@ -27,6 +27,8 @@ def index():
                 return redirect("/pdm")
             else:
                 error_message = "Invalid username or password"
+    elif "username" in session:
+        return redirect("/pdm")
 
     return render_template("index.html", error_message=error_message)
 
@@ -67,23 +69,65 @@ def pdm():
     if "username" in session:
         username = session["username"]
         active_tab = request.args.get('tab', 'search')
+        item_type_selected = request.args.get('item_type') or request.form.get('item_type', 'Manufactured Part')
+
+        form_description = request.args.get('description', '')
+        form_revision = request.args.get('revision', '')
+        form_material = request.args.get('material', '')
+        form_vendor = request.args.get('vendor', '')
+        form_vendor_part_number = request.args.get('vendor_part_number', '')
+
+        search_performed = False
+        items = []
+        assemblies = []
+        manufactured_parts = []
+        fixed_parts = []
 
         if request.method == "POST":
-            search_description = request.form.get("search_description")
-            item_filter = request.form.get("item_filter")
+            if 'searchform' in request.form:
+                search_description = request.form.get("search_description")
+                item_filter = request.form.get("item_filter")
+                items_rows = db.search_items_db(search_description, item_filter)
+                for row in items_rows:
+                    item_dict = dict(row)
+                    items.append(item_dict)
+                active_tab = 'search'
+                search_performed = True
 
-            items_rows = db.search_items_db(search_description, item_filter)
-            items = []
+            elif 'additemform' in request.form:
+                item_type = request.form.get("item_type")
+                description = request.form.get("description")
+                revision = request.form.get("revision")
+
+                if item_type == 'Manufactured Part':
+                    material = request.form.get("material")
+                    success = db.add_manufactured_part(description, revision, username, material)
+                elif item_type == 'Fixed Part':
+                    vendor = request.form.get("vendor")
+                    vendor_part_number = request.form.get("vendor_part_number")
+                    success = db.add_fixed_part(description, revision, username, vendor, vendor_part_number)
+                elif item_type == 'Assembly':
+                    success = db.add_assembly(description, revision, username)
+                else:
+                    success = False
+
+                if success:
+                    flash(f"{item_type} '{description}' lisätty onnistuneesti!", "success")
+                else:
+                    flash(f"Virhe lisättäessä {item_type} '{description}'. Tarkista tiedot ja yritä uudelleen.", "error")
+                active_tab = 'add'
+
+        else:
+            items_rows = db.get_all_items()
             for row in items_rows:
                 item_dict = dict(row)
                 items.append(item_dict)
-        else:
-            items = db.get_items()
+            assemblies = db.get_assemblies()
+            manufactured_parts = db.get_manufactured_parts()
+            fixed_parts = db.get_fixed_parts()
 
-        assemblies = db.get_assemblies()
-        manufactured_parts = db.get_manufactured_parts()
-        fixed_parts = db.get_fixed_parts()
 
+        print(f"item_type_selected in app.py: {item_type_selected}")
 
         return render_template(
             "pdm.html",
@@ -92,7 +136,15 @@ def pdm():
             assemblies=assemblies,
             manufactured_parts=manufactured_parts,
             fixed_parts=fixed_parts,
-            active_tab=active_tab
+            active_tab=active_tab,
+            item_type_selected=item_type_selected,
+            search_performed=search_performed,
+            flashes=session.get('_flashes', []),
+            form_description=form_description,
+            form_revision=form_revision,
+            form_material=form_material,
+            form_vendor=form_vendor,
+            form_vendor_part_number=form_vendor_part_number
         )
     else:
         return redirect("/")
@@ -217,3 +269,28 @@ def delete_item(item_number):
     else:
         return redirect("/")
     return redirect("/pdm")
+
+@app.route("/user_page")
+def user_page():
+    if "username" in session:
+        username = session["username"]
+        user_items_rows = db.get_items_by_user(username)
+        user_items = []
+        for row in user_items_rows:
+            user_items.append(dict(row))
+
+        total_items_related_to_user = len(user_items)
+        item_type_counts = {}
+        for item in user_items:
+            item_type = item['item_type']
+            item_type_counts[item_type] = item_type_counts.get(item_type, 0) + 1
+
+        return render_template(
+            "user_page.html",
+            username=username,
+            user_items=user_items,
+            total_items_created=total_items_related_to_user,
+            item_type_counts=item_type_counts
+        )
+    else:
+        return redirect("/")

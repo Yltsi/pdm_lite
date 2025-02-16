@@ -98,7 +98,7 @@
         <img src="{{ url_for('static', filename='banner.png') }}" alt="PDM Lite Banner">
         <h1>PDM Lite</h1>
         <p>User: {{ session.username }}</p>
-        <p><a href="/logout">Logout</a></p>
+        <p><a href="/user_page">User Page</a> | <a href="/logout">Logout</a></p>
     </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -119,6 +119,7 @@
     <div id="SearchTab" class="tab-content {% if active_tab == 'search' %}active{% else %}hidden{% endif %}">
         <h3>Search Items</h3>
         <form id="searchform" action="/pdm" method="POST">
+            <input type="hidden" name="searchform" value="1">
             <label for="item_filter">Filter by Item Type:</label>
             <select id="item_filter" name="item_filter">
                 <option value="All">All</option>
@@ -177,41 +178,49 @@
 
     <div id="AddTab" class="tab-content {% if active_tab == 'add' %}active{% else %}hidden{% endif %}">
         <h3>Add new item</h3>
-        <form id="additemform" action="/add_item" method="POST">
+        <form id="additemform" action="/pdm?tab=add" method="POST">
+            <input type="hidden" name="tab" value="add">
             <label for="item_type">Item Type:</label>
-            <select id="item_type" name="item_type" onchange="showItemFields()">
-                <option value="Manufactured Part">Manufactured Part</option>
-                <option value="Fixed Part">Fixed Part</option>
-                <option value="Assembly">Assembly</option>
-            </select><br><br>
-
+            <select id="item_type" name="item_type" onchange="this.form.submit()">
+                <option value="Manufactured Part" {% if item_type_selected == 'Manufactured Part' %}selected{% endif %}>Manufactured Part</option>
+                <option value="Fixed Part" {% if item_type_selected == 'Fixed Part' %}selected{% endif %}>Fixed Part</option>
+                <option value="Assembly" {% if item_type_selected == 'Assembly' %}selected{% endif %}>Assembly</option>
+            </select>
+            <br><br>
+    
             <label for="description">Description:</label>
-            <textarea id="description" name="description"></textarea><br><br>
-
+            <textarea id="description" name="description">{{ form_description }}</textarea><br><br>
+    
             <label for="revision">Revision:</label>
-            <input type="text" id="revision" name="revision" value="1"><br><br>
-
-            {% if request.form.get('item_type') == 'Manufactured Part' or 'item_type' not in request.form %}
+            <input type="text" id="revision" name="revision" value="{{ form_revision }}"><br><br>
+    
+            {% if item_type_selected == 'Manufactured Part' %}
             <div id="manufacturedPartFields">
                 <h4>Manufactured Part Details</h4>
                 <label for="material">Material:</label>
-                <input type="text" id="material" name="material"><br><br>
+                <input type="text" id="material" name="material" value="{{ form_material }}"><br><br>
             </div>
             {% endif %}
-
-            {% if request.form.get('item_type') == 'Fixed Part' or 'item_type' not in request.form %}
+    
+            {% if item_type_selected == 'Fixed Part' %}
             <div id="fixedPartFields">
                 <h4>Fixed Part Details</h4>
                 <label for="vendor">Vendor:</label>
-                <input type="text" id="vendor" name="vendor"><br><br>
+                <input type="text" id="vendor" name="vendor" value="{{ form_vendor }}"><br><br>
                 <label for="vendor_part_number">Vendor Part Number:</label>
-                <input type="text" id="vendor_part_number" name="vendor_part_number"><br><br>
+                <input type="text" id="vendor_part_number" name="vendor_part_number" value="{{ form_vendor_part_number }}"><br><br>
             </div>
             {% endif %}
-            <button type="submit">Add Item</button>
+    
+            {% if item_type_selected == 'Assembly' %}
+            <div id="assemblyFields">
+                <h4>Assembly Details</h4>
+                <p>Bom table in future</p>
+            </div>
+            {% endif %}
+    
+            <button type="submit" name="additemform">Add Item</button>
         </form>
-            
-
     </div>
 
 </body>
