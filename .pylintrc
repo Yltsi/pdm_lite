@@ -1,0 +1,40 @@
+[MASTER]
+# Enable specific checks we need
+enable=
+    bad-whitespace,
+    comparison-with-none,
+    simplifiable-if-statement
+
+# Only disable what's necessary
+disable=
+    W0702, # bare-except
+    W0703, # broad-except
+    R0903, # too-few-public-methods
+    R0913, # too-many-arguments
+    R0914  # too-many-locals
+
+[FORMAT]
+max-line-length=100
+# Enforce 4-space indentation
+indent-string='    '
+indent-after-paren=4
+
+[BASIC]
+# Enforce naming conventions
+good-names=i,j,k,ex,_,id
+# Only allow snake_case for variable and function names
+function-naming-style=snake_case
+variable-naming-style=snake_case
+argument-naming-style=snake_case
+attr-naming-style=snake_case
+
+[REPORTS]
+output-format=text
+reports=yes
+evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / statement) * 10)
+
+[SIMILARITIES]
+min-similarity-lines=4
+ignore-comments=yes
+ignore-docstrings=yes
+ignore-imports=yes

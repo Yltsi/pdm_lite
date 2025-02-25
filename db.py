@@ -16,7 +16,7 @@ def execute(sql, params=[]):
 
 def last_insert_id():
     return g.last_insert_id    
-    
+
 def query(sql, params=[]):
     con = get_connection()
     result = con.execute(sql, params).fetchall()
@@ -65,15 +65,14 @@ def add_fixed_part(description, revision, creator, vendor, vendor_part_number):
         return False
 
 def add_assembly(description, revision, creator):
-    """Adds a new assembly to the database."""
     try:
-        item_number = add_item_base("Assembly", description, revision, creator)
+        item_number = add_item_base('Assembly', description, revision, creator)
         if item_number:
-            # Bom taulu tänne
+            # BOM table integration would go here
             return True
         return False
     except Exception as e:
-        print(f"Error adding assembly to database: {e}")
+        print(f"Error adding assembly: {e}")
         return False
 
 def get_item_by_number(item_number):
@@ -155,7 +154,7 @@ def update_item_base(item_number, item_type, description, revision, username):
             fixed_part_details['vendor_part_number'] if fixed_part_details else None
         ))
 
-        sql_update_item = "UPDATE items SET description=?, revision=?, revisioner=? WHERE item_number=?"
+        sql_update_item = "UPDATE items SET description=?,revision=?, revisioner=? WHERE item_number=?"
         cursor.execute(sql_update_item, (description, revision, username, item_number))
 
         con.commit()
@@ -232,5 +231,3 @@ def get_items_by_user(username):
     sql = "SELECT item_number, item_type, description, revision, creator, revisioner FROM items WHERE creator = ? OR revisioner = ? ORDER BY item_number"
     items = query(sql, [username, username])
     return items
-
-
