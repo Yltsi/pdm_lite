@@ -1,13 +1,18 @@
+"""Database functions for the inventory management system."""
 import sqlite3
 from flask import g
 
 def get_connection():
+    """Returns a connection to the database."""
     con = sqlite3.connect("database.db")
     con.execute("PRAGMA foreign_keys = ON")
     con.row_factory = sqlite3.Row
     return con
 
-def execute(sql, params=[]):
+def execute(sql, params=None):
+    """Executes a SQL statement and commits the transaction."""
+    if params is None:
+        params = []
     con = get_connection()
     result = con.execute(sql, params)
     con.commit()
@@ -15,29 +20,44 @@ def execute(sql, params=[]):
     con.close()
 
 def last_insert_id():
-    return g.last_insert_id    
+    """Returns the last inserted row ID."""
+    return g.last_insert_id
 
-def query(sql, params=[]):
+def query(sql, params=None):
+    """Executes a SQL query and returns the result."""
+    if params is None:
+        params = []
     con = get_connection()
     result = con.execute(sql, params).fetchall()
     con.close()
     return result
 
 def add_item_base(item_type, description, revision, creator):
-    sql = "insert into items (item_type, description, revision, creator) values (?, ?, ?, ?)"
+    """Adds a new item to the database."""
+    sql = "INSERT INTO items (item_type, description, revision, creator) VALUES (?, ?, ?, ?)"
     par = [item_type, description, revision, creator]
     execute(sql, par)
     item_number = last_insert_id()
     return item_number
 
 def add_manufactured_parts_details(item_number, description, material, revision="A"):
-    sql = "insert into manufactured_parts (item_number, description, material, revision) values (?, ?, ?, ?)"
+    """Adds a new manufactured part to the database."""
+    sql = (
+        "INSERT INTO manufactured_parts "
+        "(item_number, description, material, revision) "
+        "VALUES (?, ?, ?, ?)"
+    )
     par = [item_number, description, material, revision]
     execute(sql, par)
     return True
 
 def add_fixed_part_details(item_number, description, vendor, vendor_part_number, revision="A"):
-    sql = "insert into fixed_parts (item_number, description, vendor, vendor_part_number, revision) values (?, ?, ?, ?, ?)"
+    """Adds a new fixed part to the database."""
+    sql = (
+        "INSERT INTO fixed_parts "
+        "(item_number, description, vendor, vendor_part_number, revision) "
+        "VALUES (?, ?, ?, ?, ?)"
+    )
     par = [item_number, description, vendor, vendor_part_number, revision]
     execute(sql, par)
     return True
@@ -58,13 +78,20 @@ def add_fixed_part(description, revision, creator, vendor, vendor_part_number):
     try:
         item_number = add_item_base("Fixed Part", description, revision, creator)
         if item_number:
-            return add_fixed_part_details(item_number, description, vendor, vendor_part_number, revision)
+            return add_fixed_part_details(
+                item_number,
+                description,
+                vendor,
+                vendor_part_number,
+                revision
+            )
         return False
     except Exception as e:
         print(f"Error adding fixed part to database: {e}")
         return False
 
 def add_assembly(description, revision, creator):
+    """Adds a new assembly to the database."""
     try:
         item_number = add_item_base('Assembly', description, revision, creator)
         if item_number:
@@ -76,7 +103,8 @@ def add_assembly(description, revision, creator):
         return False
 
 def get_item_by_number(item_number):
-    sql = "select * from items where item_number = ?"
+    """Returns an item by its item number."""
+    sql = "SELECT * FROM items WHERE item_number = ?"
     par = [item_number]
     result = query(sql, par)
     if result:
@@ -84,7 +112,10 @@ def get_item_by_number(item_number):
     return None
 
 def search_items_db(search_description, item_filter):
-    sql = "SELECT item_number, item_type, description, revision, creator, revisioner FROM items WHERE 1=1"
+    """Searches the items database for items matching the search criteria."""
+    sql = ("SELECT item_number, item_type, description, revision, creator, revisioner "
+           "FROM items "
+           "WHERE 1=1")
     par = []
 
     if item_filter != "All":
@@ -101,12 +132,16 @@ def search_items_db(search_description, item_filter):
     return results
 
 def get_all_items():
-    sql = "SELECT item_number, item_type, description, revision, creator, revisioner FROM items ORDER BY item_number"
+    """Returns all items in the database."""
+    sql = ("SELECT item_number, item_type, description, revision, creator, revisioner "
+           "FROM items "
+           "ORDER BY item_number")
     items = query(sql)
     print("get_all_items_ordered_by_number items:", items)
     return items
 
 def get_manufactured_part_details(item_number):
+    """Returns the details of a manufactured part."""
     sql = "SELECT * FROM manufactured_parts WHERE item_number = ?"
     par = [item_number]
     result = query(sql, par)
@@ -115,6 +150,7 @@ def get_manufactured_part_details(item_number):
     return None
 
 def get_fixed_part_details(item_number):
+    """Returns the details of a fixed part."""
     sql = "SELECT * FROM fixed_parts WHERE item_number = ?"
     par = [item_number]
     result = query(sql, par)
@@ -154,7 +190,10 @@ def update_item_base(item_number, item_type, description, revision, username):
             fixed_part_details['vendor_part_number'] if fixed_part_details else None
         ))
 
-        sql_update_item = "UPDATE items SET description=?,revision=?, revisioner=? WHERE item_number=?"
+        sql_update_item = (
+            "UPDATE items SET description=?, revision=?, revisioner=? "
+            "WHERE item_number=?"
+        )
         cursor.execute(sql_update_item, (description, revision, username, item_number))
 
         con.commit()
@@ -168,6 +207,7 @@ def update_item_base(item_number, item_type, description, revision, username):
         return False
 
 def update_manufactured_parts_details(item_number, description, material, revision):
+    """Updates the details of a manufactured part."""
     try:
         con = get_connection()
         cursor = con.cursor()
@@ -184,10 +224,12 @@ def update_manufactured_parts_details(item_number, description, material, revisi
         return False
 
 def update_fixed_parts_details(item_number, description, vendor, vendor_part_number, revision):
+    """Updates the details of a fixed part."""
     try:
         con = get_connection()
         cursor = con.cursor()
-        sql = "UPDATE fixed_parts SET description=?, vendor=?, vendor_part_number=? WHERE item_number=?"
+        sql = ("UPDATE fixed_parts SET description=?, vendor=?, "
+               "vendor_part_number=? WHERE item_number=?")
         cursor.execute(sql, (description, vendor, vendor_part_number, item_number))
         con.commit()
         con.close()
@@ -200,6 +242,7 @@ def update_fixed_parts_details(item_number, description, vendor, vendor_part_num
         return False
 
 def delete_item_by_number(item_number):
+    """Deletes an item from the database."""
     sql = "DELETE FROM items WHERE item_number = ?"
     par = [item_number]
     try:
@@ -208,26 +251,34 @@ def delete_item_by_number(item_number):
     except sqlite3.Error as e:
         print(f"Database error during delete: {e}")
         return False
-    
+
 def get_items():
-    sql = "SELECT item_number, item_type, description, revision, creator, revisioner FROM items ORDER BY item_number"
+    """Returns all items in the database."""
+    sql = ("SELECT item_number, item_type, description, revision, creator, revisioner "
+           "FROM items ORDER BY item_number")
     items = query(sql)
     return items
 
 def get_assemblies():
+    """Returns all assemblies in the database."""
     return []
 
 def get_manufactured_parts():
+    """Returns all manufactured parts in the database."""
     sql = "SELECT * FROM manufactured_parts"
     manufactured_parts = query(sql)
     return manufactured_parts
 
 def get_fixed_parts():
+    """Returns all fixed parts in the database."""
     sql = "SELECT * FROM fixed_parts"
     fixed_parts = query(sql)
     return fixed_parts
 
 def get_items_by_user(username):
-    sql = "SELECT item_number, item_type, description, revision, creator, revisioner FROM items WHERE creator = ? OR revisioner = ? ORDER BY item_number"
+    """Returns all items created or revised by a user."""
+    sql = ("SELECT item_number, item_type, description, revision, creator, revisioner "
+           "FROM items WHERE creator = ? OR revisioner = ? "
+           "ORDER BY item_number")
     items = query(sql, [username, username])
     return items

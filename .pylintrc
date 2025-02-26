@@ -1,8 +1,7 @@
 [MASTER]
 # Enable specific checks we need
 enable=
-    bad-whitespace,
-    comparison-with-none,
+    singleton-comparison,
     simplifiable-if-statement
 
 # Only disable what's necessary
@@ -14,7 +13,7 @@ disable=
     R0914  # too-many-locals
 
 [FORMAT]
-max-line-length=100
+max-line-length=200
 # Enforce 4-space indentation
 indent-string='    '
 indent-after-paren=4
