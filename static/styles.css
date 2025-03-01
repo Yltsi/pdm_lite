@@ -187,3 +187,16 @@ tr:nth-child(even) {
 tr:hover {
     background-color: #f1f1f1;
 }
+
+.button-group {
+    margin-top: 20px;
+}
+.button-group button {
+    margin-right: 10px;
+}
+.cancel-button {
+    background-color: #a52727;
+}
+.cancel-button:hover {
+    background-color: #a64646;
+}

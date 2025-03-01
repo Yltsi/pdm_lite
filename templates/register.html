@@ -3,80 +3,7 @@
 
 <head>
   <title>PDM Lite</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      margin: 2em;
-    }
-
-    .banner {
-      text-align: center;
-      margin-bottom: 2em;
-    }
-
-    .banner img {
-      max-width: 70%;
-      height: auto;
-    }
-
-    .auth-options {
-      text-align: center;
-      margin-bottom: 1em;
-    }
-
-    .login-form {
-      max-width: 300px;
-      margin: 0 auto;
-      padding: 20px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      text-align: center;
-    }
-
-    .form-group {
-      margin-bottom: 1em;
-    }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 0.5em;
-    }
-
-    input[type="text"],
-    input[type="password"] {
-      width: 100%;
-      padding: 8px;
-      box-sizing: border-box;
-      border: 1px solid #ccc;
-      border-radius: 3px;
-    }
-
-    input[type="submit"] {
-      padding: 10px 20px;
-      background-color: #0051ff;
-      color: white;
-      border: none;
-      border-radius: 3px;
-      cursor: pointer;
-    }
-
-    input[type="submit"]:hover {
-      background-color: #3e7bff;
-    }
-
-    .error-message {
-      color: red;
-      margin-top: 1em;
-      text-align: center;
-    }
-
-    .success-message {
-      color: green;
-      margin-top: 1em;
-      text-align: center;
-    }
-
-  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 
 <body>
@@ -109,18 +36,18 @@
       </div>
       {% endif %}
     
-      <p>
-        Username: <br />
-        <input type="text" name="username" />
-      </p>
-      <p>
-        Password: <br />
-        <input type="password" name="password1" />
-      </p>
-      <p>
-        Password again: <br />
-        <input type="password" name="password2" />
-      </p>
+      <div class="form-group">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" />
+      </div>
+      <div class="form-group">
+        <label for="password1">Password:</label>
+        <input type="password" id="password1" name="password1" />
+      </div>
+      <div class="form-group">
+        <label for="password2">Password again:</label>
+        <input type="password" id="password2" name="password2" />
+      </div>
       <input type="submit" value="Register" />
     </form>
   </div>

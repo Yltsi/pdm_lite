@@ -3,13 +3,26 @@
 <head>
     <title>Edit Item - PDM Lite</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        .item-info {
+            margin-bottom: 10px;
+        }
+        .item-info label {
+            font-weight: bold;
+            display: inline-block;
+            width: 150px;
+        }
+        .item-info span {
+            display: inline-block;
+        }
+    </style>
 </head>
 <body>
     <div class="banner">
         <img src="{{ url_for('static', filename='banner.png') }}" alt="PDM Lite Banner">
         <h1>PDM Lite - Edit Item</h1>
         <p>User: {{ session.username }}</p>
-        <p><a href="/logout">Logout</a></p>
+        <p><a href="/pdm">Back to PDM</a> | <a href="/logout">Logout</a></p>
     </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -25,8 +38,17 @@
     <h2>Edit Item #{{ item.item_number }}</h2>
 
     <form id="edititemform" action="/update_item/{{ item.item_number }}" method="POST">
-        <label>Item Type:</label>
-        <p>{{ item.item_type }}</p> <br><br>
+        <div class="item-info">
+            <label>Item Type:</label>
+            <span>{{ item.item_type }}</span>
+        </div>
+        
+        <div class="item-info">
+            <label>Current Revision:</label>
+            <span>{{ item.revision }}</span>
+        </div>
+        
+        <br>
 
         <label for="description">Description:</label>
         <textarea id="description" name="description">{{ item.description }}</textarea><br><br>
@@ -53,7 +75,10 @@
         </div>
         {% endif %}
 
-        <button type="submit">Update Item</button>
+        <div class="button-group">
+            <button type="submit">Update Item</button>
+            <button type="button" class="cancel-button" onclick="window.location.href='/pdm'">Cancel</button>
+        </div>
     </form>
 
 </body>
