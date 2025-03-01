@@ -1,5 +1,5 @@
 """Item management functions for PDM Lite."""
-from flask import render_template, request, session, redirect, flash
+from flask import render_template, request, session, redirect, flash, url_for
 import db
 
 def pdm():
@@ -229,3 +229,30 @@ def user_page():
             item_type_counts=item_type_counts
         )
     return redirect("/")
+
+def item_details(item_number):
+    """Display detailed information about an item and its revision history."""
+    if "username" not in session:
+        return redirect("/")
+
+    item = db.get_item_by_number(item_number)
+    if not item:
+        flash("Item not found", "error")
+        return redirect("/pdm")
+
+    revisions = db.get_item_revisions(item_number)
+
+    # Get specific details based on item type
+    specific_details = None
+    if item["item_type"] == "Manufactured Part":
+        specific_details = db.get_manufactured_part_details(item_number)
+    elif item["item_type"] == "Fixed Part":
+        specific_details = db.get_fixed_part_details(item_number)
+
+    return render_template(
+        "item_details.html", 
+        item=item,
+        specific_details=specific_details,
+        revisions=revisions,
+        username=session["username"]
+    )

@@ -282,3 +282,16 @@ def get_items_by_user(username):
            "ORDER BY item_number")
     items = query(sql, [username, username])
     return items
+
+def get_item_revisions(item_number):
+    """Returns the revision history of an item."""
+    sql = """
+        SELECT id, item_number, revision_number, revision_date, revisioner, 
+               item_type, description, material, vendor, vendor_part_number
+        FROM item_revisions 
+        WHERE item_number = ? 
+        ORDER BY revision_date DESC
+    """
+    par = [item_number]
+    result = query(sql, par)
+    return result

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Item Details - PDM Lite</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        .details-section {
+            margin-bottom: 30px;
+        }
+        .item-info {
+            margin-bottom: 10px;
+        }
+        .item-info label {
+            font-weight: bold;
+            display: inline-block;
+            width: 150px;
+        }
+        .item-info span {
+            display: inline-block;
+        }
+        .action-buttons {
+            margin-top: 20px;
+        }
+        .action-buttons a {
+            margin-right: 15px;
+            padding: 8px 15px;
+            text-decoration: none;
+            color: white;
+            border-radius: 4px;
+        }
+        .edit-button {
+            background-color: #0051ff;
+        }
+        .back-button {
+            background-color: #555555;
+        }
+    </style>
+</head>
+<body>
+    <div class="banner">
+        <img src="{{ url_for('static', filename='banner.png') }}" alt="PDM Lite Banner">
+        <h1>PDM Lite - Item Details</h1>
+        <p>User: {{ username }}</p>
+        <p><a href="/pdm">Back to PDM</a> | <a href="/logout">Logout</a></p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul class="flashes">
+      {% for category, message in messages %}
+        <li class="{{ category }}">{{ message }}</li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+    {% endwith %}
+
+    <div class="details-section">
+        <h2>Item Details</h2>
+        
+        <div class="item-info">
+            <label>Item Number:</label>
+            <span>{{ item.item_number }}</span>
+        </div>
+        
+        <div class="item-info">
+            <label>Item Type:</label>
+            <span>{{ item.item_type }}</span>
+        </div>
+        
+        <div class="item-info">
+            <label>Description:</label>
+            <span>{{ item.description }}</span>
+        </div>
+        
+        <div class="item-info">
+            <label>Current Revision:</label>
+            <span>{{ item.revision }}</span>
+        </div>
+
+        {% if item.item_type == 'Manufactured Part' and specific_details %}
+        <div class="item-info">
+            <label>Material:</label>
+            <span>{{ specific_details.material }}</span>
+        </div>
+        {% endif %}
+        
+        {% if item.item_type == 'Fixed Part' and specific_details %}
+        <div class="item-info">
+            <label>Vendor:</label>
+            <span>{{ specific_details.vendor }}</span>
+        </div>
+        
+        <div class="item-info">
+            <label>Vendor Part Number:</label>
+            <span>{{ specific_details.vendor_part_number }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="item-info">
+        <label>Creation Date:</label>
+        <span>{{ item.creation_date }}</span>
+    </div>
+    
+    <div class="item-info">
+        <label>Creator:</label>
+        <span>{{ item.creator }}</span>
+    </div>
+    
+    <div class="item-info">
+        <label>Revisioner:</label>
+        <span>{{ item.revisioner or 'None' }}</span>
+    </div>
+
+    <div class="details-section">
+        <h2>Revision History</h2>
+        
+        {% if revisions %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Revision</th>
+                    <th>Date</th>
+                    <th>Revisioner</th>
+                    <th>Description</th>
+                    {% if item.item_type == 'Manufactured Part' %}
+                    <th>Material</th>
+                    {% endif %}
+                    {% if item.item_type == 'Fixed Part' %}
+                    <th>Vendor</th>
+                    <th>Vendor Part Number</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for rev in revisions %}
+                <tr>
+                    <td>{{ rev.revision_number }}</td>
+                    <td>{{ rev.revision_date }}</td>
+                    <td>{{ rev.revisioner }}</td>
+                    <td>{{ rev.description }}</td>
+                    {% if item.item_type == 'Manufactured Part' %}
+                    <td>{{ rev.material }}</td>
+                    {% endif %}
+                    {% if item.item_type == 'Fixed Part' %}
+                    <td>{{ rev.vendor }}</td>
+                    <td>{{ rev.vendor_part_number }}</td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No revision history found for this item.</p>
+        {% endif %}
+    </div>
+
+    <div class="action-buttons">
+        <a href="/edit_item/{{ item.item_number }}" class="edit-button">Edit Item</a>
+        <a href="/pdm" class="back-button">Back to PDM</a>
+    </div>
+</body>
+</html>

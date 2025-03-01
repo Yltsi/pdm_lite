@@ -20,6 +20,7 @@ app.add_url_rule('/edit_item/<int:item_number>', 'edit_item', items.edit_item)
 app.add_url_rule('/update_item/<int:item_number>', 'update_item', items.update_item, methods=["POST"])
 app.add_url_rule('/delete_item/<int:item_number>', 'delete_item', items.delete_item, methods=["POST"])
 app.add_url_rule('/user_page', 'user_page', items.user_page)
+app.add_url_rule('/item_details/<int:item_number>', 'item_details', items.item_details)
 
 if __name__ == "__main__":
     app.run(debug=True)
