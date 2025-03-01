@@ -88,7 +88,7 @@ def add_item():
     """Adds a new item to the database."""
     if "username" not in session:
         return redirect("/")
-        
+
     if request.method == "POST":
         username = session["username"]
         item_type = request.form["item_type"]
@@ -98,7 +98,7 @@ def add_item():
         if not item_type or not description or not revision:
             flash("All fields are required", "error")
             return redirect("/pdm")
-            
+
         item_number = db.add_item_base(item_type, description, revision, username)
 
         if item_number:
