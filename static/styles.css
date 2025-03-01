@@ -248,3 +248,38 @@ tr:hover {
 .component-search .search-group select {
     flex: 1;
 }
+
+.small-button {
+    padding: 3px 8px;
+    font-size: 12px;
+    background-color: #0051ff;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    margin-left: 5px;
+}
+
+.small-button:hover {
+    background-color: #3e7bff;
+}
+
+.info-box {
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    background-color: #e7f3fe;
+    border-left: 5px solid #2196F3;
+    color: #0c5460;
+    font-size: 0.9em;
+}
+
+.primary-button {
+    background-color: #004cbe;
+    font-weight: bold;
+    font-size: 16px;
+    padding: 12px 24px;
+}
+
+.primary-button:hover {
+    background-color: #003da1;
+}

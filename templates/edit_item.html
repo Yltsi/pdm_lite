@@ -15,6 +15,20 @@
         .item-info span {
             display: inline-block;
         }
+        .bom-controls {
+            margin: 15px 0;
+            background-color: #f8f8f8;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .bom-table input[type=number] {
+            width: 70px;
+            padding: 5px;
+        }
+        .editable-row {
+            background-color: #f0f7ff;
+        }
     </style>
 </head>
 <body>
@@ -75,11 +89,123 @@
         </div>
         {% endif %}
 
+        {% if item.item_type == 'Assembly' %}
+        <div id="assemblyFields">
+            <h4>Assembly Details</h4>
+            <div class="bom-section">
+                <h5>Bill of Materials</h5>
+                <div class="info-box">
+                    Edit quantities directly in the table. To remove components, check the "Remove" box.
+                    When finished, click "Update Item" at the bottom of the page to save all changes.
+                </div>
+                
+                <!-- Component Search -->
+                <div class="component-search">
+                    <label>Search Components to Add:</label>
+                    <div class="search-group">
+                        <input type="hidden" name="description" id="hidden_description" value="{{ item.description }}">
+                        <input type="text" id="component_search" name="component_search" placeholder="Search by name or number">
+                        <select id="component_type_filter" name="component_type_filter">
+                            <option value="All">All Types</option>
+                            <option value="Manufactured Part">Manufactured Part</option>
+                            <option value="Fixed Part">Fixed Part</option>
+                            <option value="Assembly">Assembly</option>
+                        </select>
+                        <button type="submit" name="search_components" value="1">Search Components</button>
+                    </div>
+                </div>
+                
+                <!-- Component Search Results -->
+                {% if available_components %}
+                <div class="search-results">
+                    <h6>Available Components</h6>
+                    <div class="scrollable-table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Item Number</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Add</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for component in available_components %}
+                                <tr>
+                                    <td>{{ component.item_number }}</td>
+                                    <td>{{ component.item_type }}</td>
+                                    <td>{{ component.description }}</td>
+                                    <td>
+                                        <input type="radio" name="add_component_id" value="{{ component.item_number }}">
+                                        <input type="number" name="add_qty_{{ component.item_number }}" value="1" min="1" style="width: 60px;">
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <div style="margin-top: 10px; text-align: right;">
+                            <button type="submit" name="add_component" value="1">Add Selected Component</button>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Current BOM Items - Editable Table -->
+                <div class="current-bom">
+                    <h5>Current BOM (Editable)</h5>
+                    {% if bom_items %}
+                    <div class="scrollable-table-container">
+                        <table class="bom-table">
+                            <thead>
+                                <tr>
+                                    <th>Line</th>
+                                    <th>Item Number</th>
+                                    <th>Description</th>
+                                    <th>Quantity</th>
+                                    <th>Remove</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for bom_item in bom_items %}
+                                <tr class="editable-row">
+                                    <td>
+                                        {{ bom_item.line_number }}
+                                        <input type="hidden" name="bom_line_numbers[]" value="{{ bom_item.line_number }}">
+                                    </td>
+                                    <td>
+                                        {{ bom_item.component_item_number }}
+                                        <input type="hidden" name="bom_component_ids[]" value="{{ bom_item.component_item_number }}">
+                                    </td>
+                                    <td>{{ bom_item.description }}</td>
+                                    <td>
+                                        <input type="number" name="bom_quantities[]" value="{{ bom_item.quantity }}" min="1">
+                                    </td>
+                                    <td>
+                                        <input type="checkbox" name="remove_component_lines[]" value="{{ bom_item.line_number }}">
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+                        <div class="bom-controls">
+                            <p>
+                                <strong>Note:</strong> Changes to the BOM will be saved when you click "Update Item".
+                            </p>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p>No components added yet</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="button-group">
-            <button type="submit">Update Item</button>
+            <button type="submit" name="update_item" value="1" class="primary-button">Update Item</button>
             <button type="button" class="cancel-button" onclick="window.location.href='/pdm'">Cancel</button>
         </div>
     </form>
-
 </body>
 </html>
