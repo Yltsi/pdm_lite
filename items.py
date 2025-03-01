@@ -15,6 +15,7 @@ def pdm():
         form_vendor = request.form.get('vendor', '')
         form_vendor_part_number = request.form.get('vendor_part_number', '')
         component_search = request.form.get('component_search', '')
+        component_type_filter = request.form.get('component_type_filter', 'All')
 
         # Initialize for assembly BOM functionality
         available_components = []
@@ -35,7 +36,8 @@ def pdm():
             # Search components for BOM
             if 'search_components' in request.form and item_type_selected == 'Assembly':
                 search_term = request.form.get('component_search', '')
-                available_components = db.get_available_components(search_term)
+                type_filter = request.form.get('component_type_filter', 'All')
+                available_components = db.get_available_components(search_term, None, type_filter)
                 bom_items = session.get('temp_bom_items', [])
                 active_tab = 'add'
                 form_description = request.form.get('description', '')
@@ -218,6 +220,7 @@ def pdm():
             form_vendor=form_vendor,
             form_vendor_part_number=form_vendor_part_number,
             component_search=component_search,
+            component_type_filter=component_type_filter,
             available_components=available_components,
             bom_items=bom_items
         )

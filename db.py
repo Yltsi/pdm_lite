@@ -130,7 +130,7 @@ def add_assembly_component(assembly_item_number, component_item_number, quantity
         print(f"Error adding assembly component: {e}")
         return False
 
-def get_available_components(search_term=None, exclude_item_number=None):
+def get_available_components(search_term=None, exclude_item_number=None, type_filter='All'):
     """Returns available components for assembly BOM."""
     sql = """
         SELECT item_number, item_type, description, revision
@@ -143,13 +143,17 @@ def get_available_components(search_term=None, exclude_item_number=None):
         sql += " AND item_number != ?"
         params.append(exclude_item_number)
 
+    if type_filter and type_filter != 'All':
+        sql += " AND item_type = ?"
+        params.append(type_filter)
+
     if search_term:
         sql += " AND (description LIKE ? OR item_number LIKE ?)"
         params.append(f"%{search_term}%")
         params.append(f"%{search_term}%")
 
     sql += " ORDER BY item_number"
-
+    
     return query(sql, params)
 
 def check_circular_reference(assembly_item_number, component_item_number):

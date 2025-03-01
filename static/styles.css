@@ -217,3 +217,34 @@ tr:hover {
 .cancel-button:hover {
     background-color: #a64646;
 }
+
+.scrollable-table-container {
+    max-height: 300px; /* Approximately 8 rows */
+    overflow-y: auto;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+}
+
+.scrollable-table-container table {
+    margin-top: 0;
+}
+
+.component-search {
+    margin-bottom: 15px;
+}
+
+.component-search label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.component-search .search-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.component-search .search-group input,
+.component-search .search-group select {
+    flex: 1;
+}
