@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS assemblies (
     assembly_item_number INTEGER,
     component_item_number INTEGER,
     quantity INTEGER NOT NULL DEFAULT 1,
+    line_number INTEGER NOT NULL,
     revision TEXT DEFAULT '1',
     PRIMARY KEY (assembly_item_number, component_item_number),
     FOREIGN KEY (assembly_item_number) REFERENCES items(item_number),

@@ -1,5 +1,5 @@
 """Item management functions for PDM Lite."""
-from flask import render_template, request, session, redirect, flash, url_for
+from flask import render_template, request, session, redirect, flash
 import db
 
 def pdm():
@@ -9,20 +9,126 @@ def pdm():
         active_tab = request.args.get('tab', 'search')
         item_type_selected = (request.args.get('item_type') or
                               request.form.get('item_type', 'Manufactured Part'))
-        form_description = request.args.get('description', '')
+        form_description = request.form.get('description', '')
         form_revision = request.args.get('revision', '')
-        form_material = request.args.get('material', '')
-        form_vendor = request.args.get('vendor', '')
-        form_vendor_part_number = request.args.get('vendor_part_number', '')
+        form_material = request.form.get('material', '')
+        form_vendor = request.form.get('vendor', '')
+        form_vendor_part_number = request.form.get('vendor_part_number', '')
+        component_search = request.form.get('component_search', '')
 
-        search_performed = False
+        # Initialize for assembly BOM functionality
+        available_components = []
+        bom_items = []
+
+        # Initialize these variables
         items = []
         assemblies = []
         manufactured_parts = []
         fixed_parts = []
+        search_performed = False
+
+        # Store BOM items temporarily in session
+        if 'temp_bom_items' not in session:
+            session['temp_bom_items'] = []
 
         if request.method == "POST":
-            if 'searchform' in request.form:
+            # Search components for BOM
+            if 'search_components' in request.form and item_type_selected == 'Assembly':
+                search_term = request.form.get('component_search', '')
+                available_components = db.get_available_components(search_term)
+                bom_items = session.get('temp_bom_items', [])
+                active_tab = 'add'
+                form_description = request.form.get('description', '')
+
+            # Add component to BOM
+            elif 'add_component' in request.form and item_type_selected == 'Assembly':
+                component_id = int(request.form.get('component_id', 0))
+                component_qty = int(request.form.get('component_qty', 1))
+                description = request.form.get('description', '')
+
+                if component_id > 0:
+                    # Check if component already exists in the BOM
+                    existing_items = session.get('temp_bom_items', [])
+                    component_exists = False
+
+                    for item in existing_items:
+                        if item['item_number'] == component_id:
+                            component_exists = True
+                            flash(f"Component {component_id} already exists in the BOM", "error")
+                            break
+
+                    # Check for circular reference
+                    if db.check_circular_reference(None, component_id):
+                        component_exists = True
+                        flash(f"Cannot add component {component_id} - would create circular reference", "error")
+
+                    # If component doesn't exist in BOM, add it with next line number
+                    if not component_exists:
+                        component = db.get_item_by_number(component_id)
+                        if component:
+                            line_number = 10 if not existing_items else max([item['line_number'] for item in existing_items]) + 10
+                            new_item = {
+                                'line_number': line_number,
+                                'item_number': component_id,
+                                'description': component['description'],
+                                'quantity': component_qty
+                            }
+                            existing_items.append(new_item)
+                            session['temp_bom_items'] = existing_items
+                            flash(f"Component {component_id} added to BOM", "success")
+
+                # Refresh component list and BOM items
+                search_term = request.form.get('component_search', '')
+                if search_term:
+                    available_components = db.get_available_components(search_term)
+                bom_items = session.get('temp_bom_items', [])
+                form_description = description
+                active_tab = 'add'
+
+            # Remove component from BOM
+            elif 'remove_component' in request.form and item_type_selected == 'Assembly':
+                line_number = int(request.form.get('line_number', 0))
+                description = request.form.get('description', '')
+
+                if line_number > 0:
+                    existing_items = session.get('temp_bom_items', [])
+                    updated_items = [item for item in existing_items if item['line_number'] != line_number]
+                    session['temp_bom_items'] = updated_items
+                    flash(f"Component with line {line_number} removed from BOM", "success")
+
+                # Refresh component list and BOM items
+                search_term = request.form.get('component_search', '')
+                if search_term:
+                    available_components = db.get_available_components(search_term)
+                bom_items = session.get('temp_bom_items', [])
+                form_description = description
+                active_tab = 'add'
+
+            # Update component quantity
+            elif 'update_qty' in request.form and item_type_selected == 'Assembly':
+                line_number = int(request.form.get('line_number', 0))
+                component_qty = int(request.form.get('component_qty', 1))
+                description = request.form.get('description', '')
+
+                if line_number > 0:
+                    existing_items = session.get('temp_bom_items', [])
+                    for item in existing_items:
+                        if item['line_number'] == line_number:
+                            item['quantity'] = component_qty
+                            flash(f"Updated quantity for component at line {line_number}", "success")
+                            break
+
+                    session['temp_bom_items'] = existing_items
+
+                # Refresh component list and BOM items
+                search_term = request.form.get('component_search', '')
+                if search_term:
+                    available_components = db.get_available_components(search_term)
+                bom_items = session.get('temp_bom_items', [])
+                form_description = description
+                active_tab = 'add'
+
+            elif 'searchform' in request.form:
                 search_description = request.form.get("search_description")
                 item_filter = request.form.get("item_filter")
                 items_rows = db.search_items_db(search_description, item_filter)
@@ -35,7 +141,7 @@ def pdm():
             elif 'additemform' in request.form:
                 item_type = request.form.get("item_type")
                 description = request.form.get("description")
-                revision = request.form.get("revision")
+                revision = request.form.get("revision", "1")
 
                 if item_type == 'Manufactured Part':
                     material = request.form.get("material")
@@ -46,15 +152,41 @@ def pdm():
                     success = db.add_fixed_part(description, revision, username,
                                                 vendor, vendor_part_number)
                 elif item_type == 'Assembly':
-                    success = db.add_assembly(description, revision, username)
+                    # Get BOM items from session
+                    bom_items = session.get('temp_bom_items', [])
+
+                    # Create a formatted list of BOM items for the database
+                    formatted_bom = []
+                    for item in bom_items:
+                        formatted_bom.append({
+                            'component_item_number': item['item_number'],
+                            'quantity': item['quantity'],
+                            'line_number': item['line_number']
+                        })
+
+                    # Add the assembly with BOM items
+                    item_number = db.add_assembly(description, revision, username, formatted_bom)
+
+                    if item_number:
+                        # Clear temporary BOM items from session
+                        session['temp_bom_items'] = []
+                        flash(f"Assembly '{description}' added successfully with {len(formatted_bom)} components!", "success")
+                        success = True
+                    else:
+                        flash(f"Error adding Assembly '{description}'. Please check logs for details.", "error")
+                        success = False
                 else:
                     success = False
 
                 if success:
-                    flash(f"{item_type} '{description}' lisätty onnistuneesti!", "success")
+                    flash(f"{item_type} '{description}' added successfully!", "success")
                 else:
-                    flash(f"Virhe lisättäessä {item_type} '{description}'. Tarkista tiedot ja yritä uudelleen.", "error")
+                    flash(f"Error adding {item_type} '{description}'. Please check inputs and try again.", "error")
                 active_tab = 'add'
+
+            # If item type changed, clear temp BOM items
+            if 'item_type' in request.form and request.form.get('item_type') != 'Assembly':
+                session['temp_bom_items'] = []
 
         else:
             items_rows = db.get_all_items()
@@ -64,6 +196,10 @@ def pdm():
             assemblies = db.get_assemblies()
             manufactured_parts = db.get_manufactured_parts()
             fixed_parts = db.get_fixed_parts()
+
+        # Always retrieve BOM items from session if in Assembly mode
+        if item_type_selected == 'Assembly':
+            bom_items = session.get('temp_bom_items', [])
 
         return render_template(
             "pdm.html",
@@ -80,7 +216,10 @@ def pdm():
             form_revision=form_revision,
             form_material=form_material,
             form_vendor=form_vendor,
-            form_vendor_part_number=form_vendor_part_number
+            form_vendor_part_number=form_vendor_part_number,
+            component_search=component_search,
+            available_components=available_components,
+            bom_items=bom_items
         )
     return redirect("/")
 
@@ -244,15 +383,21 @@ def item_details(item_number):
 
     # Get specific details based on item type
     specific_details = None
+    bom_items = []
+
     if item["item_type"] == "Manufactured Part":
         specific_details = db.get_manufactured_part_details(item_number)
     elif item["item_type"] == "Fixed Part":
         specific_details = db.get_fixed_part_details(item_number)
+    elif item["item_type"] == "Assembly":
+        # Get BOM items for this assembly
+        bom_items = db.get_assembly_bom(item_number)
 
     return render_template(
         "item_details.html", 
         item=item,
         specific_details=specific_details,
+        bom_items=bom_items,
         revisions=revisions,
         username=session["username"]
     )

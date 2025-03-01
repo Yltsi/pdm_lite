@@ -97,6 +97,40 @@
         {% endif %}
     </div>
 
+    <!-- Display BOM items for Assembly -->
+    {% if item.item_type == 'Assembly' %}
+    <div class="details-section">
+        <h2>Bill of Materials</h2>
+        
+        {% if bom_items %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Line</th>
+                    <th>Item Number</th>
+                    <th>Description</th>
+                    <th>Item Type</th>
+                    <th>Quantity</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bom_item in bom_items %}
+                <tr>
+                    <td>{{ bom_item.line_number }}</td>
+                    <td><a href="/item_details/{{ bom_item.component_item_number }}">{{ bom_item.component_item_number }}</a></td>
+                    <td><a href="/item_details/{{ bom_item.component_item_number }}">{{ bom_item.description }}</a></td>
+                    <td>{{ bom_item.item_type }}</td>
+                    <td>{{ bom_item.quantity }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No components found for this assembly.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
     <div class="item-info">
         <label>Creation Date:</label>
         <span>{{ item.creation_date }}</span>

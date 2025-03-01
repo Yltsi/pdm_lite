@@ -125,7 +125,101 @@
             {% if item_type_selected == 'Assembly' %}
             <div id="assemblyFields">
                 <h4>Assembly Details</h4>
-                <p>Bom table in future</p>
+                <div class="bom-section">
+                    <h5>Bill of Materials</h5>
+                    
+                    <!-- Component Search -->
+                    <div class="component-search">
+                        <label for="component_search">Search Components:</label>
+                        <input type="text" id="component_search" name="component_search" value="{{ component_search }}">
+                        <button type="submit" name="search_components" value="1">Search Components</button>
+                    </div>
+                    
+                    <!-- Component Search Results -->
+                    {% if available_components %}
+                    <div class="search-results">
+                        <h6>Available Components</h6>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Item Number</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Add</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for component in available_components %}
+                                <tr>
+                                    <td>{{ component.item_number }}</td>
+                                    <td>{{ component.item_type }}</td>
+                                    <td>{{ component.description }}</td>
+                                    <td>
+                                        <form action="/pdm?tab=add" method="POST">
+                                            <input type="hidden" name="tab" value="add">
+                                            <input type="hidden" name="item_type" value="Assembly">
+                                            <input type="hidden" name="description" value="{{ form_description }}">
+                                            <input type="hidden" name="component_id" value="{{ component.item_number }}">
+                                            <input type="number" name="component_qty" value="1" min="1" style="width: 60px;">
+                                            <button type="submit" name="add_component" value="1">Add</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Current BOM Items -->
+                    <div class="current-bom">
+                        <h6>Current BOM</h6>
+                        {% if bom_items %}
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Line</th>
+                                    <th>Item Number</th>
+                                    <th>Description</th>
+                                    <th>Quantity</th>
+                                    <th>Remove</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for bom_item in bom_items %}
+                                <tr>
+                                    <td>{{ bom_item.line_number }}</td>
+                                    <td>{{ bom_item.item_number }}</td>
+                                    <td>{{ bom_item.description }}</td>
+                                    <td>
+                                        <form action="/pdm?tab=add" method="POST">
+                                            <input type="hidden" name="tab" value="add">
+                                            <input type="hidden" name="item_type" value="Assembly">
+                                            <input type="hidden" name="description" value="{{ form_description }}">
+                                            <input type="hidden" name="component_id" value="{{ bom_item.item_number }}">
+                                            <input type="hidden" name="line_number" value="{{ bom_item.line_number }}">
+                                            <input type="number" name="component_qty" value="{{ bom_item.quantity }}" min="1" style="width: 60px;">
+                                            <button type="submit" name="update_qty" value="1">Update</button>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        <form action="/pdm?tab=add" method="POST">
+                                            <input type="hidden" name="tab" value="add">
+                                            <input type="hidden" name="item_type" value="Assembly">
+                                            <input type="hidden" name="description" value="{{ form_description }}">
+                                            <input type="hidden" name="line_number" value="{{ bom_item.line_number }}">
+                                            <button type="submit" name="remove_component" value="1" class="delete-button">Remove</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <p>No components added yet</p>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
             {% endif %}
     

@@ -90,17 +90,123 @@ def add_fixed_part(description, revision, creator, vendor, vendor_part_number):
         print(f"Error adding fixed part to database: {e}")
         return False
 
-def add_assembly(description, revision, creator):
-    """Adds a new assembly to the database."""
+def add_assembly(description, revision, creator, bom_items=None):
+    """Adds a new assembly to the database with BOM items."""
     try:
         item_number = add_item_base('Assembly', description, revision, creator)
-        if item_number:
-            # BOM table integration would go here
-            return True
-        return False
+        if not item_number:
+            return False
+
+        if bom_items and isinstance(bom_items, list):
+            for bom_item in bom_items:
+                component_item_number = bom_item.get('component_item_number')
+                quantity = bom_item.get('quantity', 1)
+                line_number = bom_item.get('line_number')
+
+                # Skip if no component item number
+                if not component_item_number:
+                    continue
+
+                # Add BOM item to assembly
+                add_assembly_component(item_number, component_item_number, quantity, line_number, revision)
+
+        return item_number
     except Exception as e:
         print(f"Error adding assembly: {e}")
         return False
+
+def add_assembly_component(assembly_item_number, component_item_number, quantity, line_number, revision="1"):
+    """Adds a component to an assembly's BOM."""
+    try:
+        sql = """
+            INSERT INTO assemblies 
+            (assembly_item_number, component_item_number, quantity, line_number, revision) 
+            VALUES (?, ?, ?, ?, ?)
+        """
+        par = [assembly_item_number, component_item_number, quantity, line_number, revision]
+        execute(sql, par)
+        return True
+    except Exception as e:
+        print(f"Error adding assembly component: {e}")
+        return False
+
+def get_available_components(search_term=None, exclude_item_number=None):
+    """Returns available components for assembly BOM."""
+    sql = """
+        SELECT item_number, item_type, description, revision
+        FROM items
+        WHERE 1=1
+    """
+    params = []
+
+    if exclude_item_number:
+        sql += " AND item_number != ?"
+        params.append(exclude_item_number)
+
+    if search_term:
+        sql += " AND (description LIKE ? OR item_number LIKE ?)"
+        params.append(f"%{search_term}%")
+        params.append(f"%{search_term}%")
+
+    sql += " ORDER BY item_number"
+
+    return query(sql, params)
+
+def check_circular_reference(assembly_item_number, component_item_number):
+    """Checks if adding a component would create a circular reference."""
+    # Base case: direct circular reference
+    if assembly_item_number == component_item_number:
+        return True
+
+    # Check if component is an assembly
+    component = get_item_by_number(component_item_number)
+    if not component or component['item_type'] != 'Assembly':
+        # Not an assembly, so can't create a circular reference
+        return False
+
+    # Get all components in the component assembly
+    sql = "SELECT component_item_number FROM assemblies WHERE assembly_item_number = ?"
+    params = [component_item_number]
+    results = query(sql, params)
+
+    # Check each sub-component recursively
+    for row in results:
+        sub_component_id = row['component_item_number']
+        if sub_component_id == assembly_item_number:
+            return True  # Found circular reference
+
+        if check_circular_reference(assembly_item_number, sub_component_id):
+            return True  # Found circular reference deeper in the hierarchy
+
+    return False  # No circular reference found
+
+def get_assembly_bom(assembly_item_number):
+    """Gets the BOM for an assembly."""
+    sql = """
+        SELECT a.line_number, a.component_item_number, a.quantity, i.description, i.item_type
+        FROM assemblies a
+        JOIN items i ON a.component_item_number = i.item_number
+        WHERE a.assembly_item_number = ?
+        ORDER BY a.line_number
+    """
+    params = [assembly_item_number]
+    return query(sql, params)
+
+def get_next_bom_line_number(assembly_item_number):
+    """Gets the next available BOM line number for an assembly."""
+    sql = """
+        SELECT MAX(line_number) as max_line
+        FROM assemblies
+        WHERE assembly_item_number = ?
+    """
+    params = [assembly_item_number]
+    result = query(sql, params)
+
+    if result and result[0]['max_line'] is not None:
+        # Increment by 10
+        return result[0]['max_line'] + 10
+        # First line starts at 10
+    return 10
 
 def get_item_by_number(item_number):
     """Returns an item by its item number."""
