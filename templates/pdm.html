@@ -103,7 +103,7 @@
             <br><br>
     
             <label for="description">Description:</label>
-            <textarea id="description" name="description">{{ form_description }}</textarea><br><br>
+            <textarea id="description" name="description" required>{{ form_description }}</textarea><br><br>
     
             <div class="info-text">Revision: 1</div><br><br>
     
@@ -212,6 +212,7 @@
                                                 <input type="hidden" name="description" value="{{ form_description }}">
                                                 <input type="hidden" name="component_id" value="{{ bom_item.item_number }}">
                                                 <input type="hidden" name="line_number" value="{{ bom_item.line_number }}">
+                                                <input type="hidden" name="update_qty" value="1">
                                                 <input type="number" name="component_qty" value="{{ bom_item.quantity }}" min="1" style="width: 60px;" 
                                                        onchange="this.form.submit();">
                                             </form>
@@ -238,7 +239,19 @@
             </div>
             {% endif %}
     
-            <button type="submit" name="additemform">Add Item</button>
+            <div style="clear: both; margin-top: 20px;">
+                {% if item_type_selected == 'Assembly' %}
+                    {% if bom_items %}
+                        <input type="hidden" name="has_bom_items" value="1">
+                        <button type="submit" name="additemform" value="1">Add Item</button>
+                    {% else %}
+                        <p class="validation-error">Please add at least one component to the BOM before submitting.</p>
+                        <button type="submit" name="search_components" value="1">Search Components First</button>
+                    {% endif %}
+                {% else %}
+                    <button type="submit" name="additemform" value="1">Add Item</button>
+                {% endif %}
+            </div>
         </form>
     </div>
 

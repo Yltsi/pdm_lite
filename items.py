@@ -34,8 +34,107 @@ def pdm():
             session['temp_bom_items'] = []
 
         if request.method == "POST":
+            # Check specifically for the additemform button first
+            if 'additemform' in request.form:
+                item_type = request.form.get("item_type")
+                description = request.form.get("description")
+                revision = request.form.get("revision", "1")
+
+                # Server-side validation
+                if not description or description.strip() == "":
+                    flash("Description is required", "error")
+                    return render_template(
+                        "pdm.html",
+                        username=username,
+                        items=items,
+                        assemblies=assemblies,
+                        manufactured_parts=manufactured_parts,
+                        fixed_parts=fixed_parts,
+                        active_tab='add',
+                        item_type_selected=item_type_selected,
+                        search_performed=search_performed,
+                        flashes=session.get('_flashes', []),
+                        form_description=form_description,
+                        form_revision=form_revision,
+                        form_material=form_material,
+                        form_vendor=form_vendor,
+                        form_vendor_part_number=form_vendor_part_number,
+                        component_search=component_search,
+                        component_type_filter=component_type_filter,
+                        available_components=available_components,
+                        bom_items=bom_items
+                    )
+
+                # For Assembly validation, make sure there are BOM items
+                if item_type == 'Assembly':
+                    bom_items = session.get('temp_bom_items', [])
+                    if not bom_items:
+                        flash("Assembly must have at least one component", "error")
+                        return render_template(
+                            "pdm.html",
+                            username=username,
+                            items=items,
+                            assemblies=assemblies,
+                            manufactured_parts=manufactured_parts,
+                            fixed_parts=fixed_parts,
+                            active_tab='add',
+                            item_type_selected=item_type_selected,
+                            search_performed=search_performed,
+                            flashes=session.get('_flashes', []),
+                            form_description=form_description,
+                            form_revision=form_revision,
+                            form_material=form_material,
+                            form_vendor=form_vendor,
+                            form_vendor_part_number=form_vendor_part_number,
+                            component_search=component_search,
+                            component_type_filter=component_type_filter,
+                            available_components=available_components,
+                            bom_items=bom_items
+                        )
+
+                if item_type == 'Manufactured Part':
+                    material = request.form.get("material")
+                    success = db.add_manufactured_part(description, revision, username, material)
+                elif item_type == 'Fixed Part':
+                    vendor = request.form.get("vendor")
+                    vendor_part_number = request.form.get("vendor_part_number")
+                    success = db.add_fixed_part(description, revision, username,
+                                                vendor, vendor_part_number)
+                elif item_type == 'Assembly':
+                    # Get BOM items from session
+                    bom_items = session.get('temp_bom_items', [])
+
+                    # Create a formatted list of BOM items for the database
+                    formatted_bom = []
+                    for item in bom_items:
+                        formatted_bom.append({
+                            'component_item_number': item['item_number'],
+                            'quantity': item['quantity'],
+                            'line_number': item['line_number']
+                        })
+
+                    # Add the assembly with BOM items
+                    item_number = db.add_assembly(description, revision, username, formatted_bom)
+
+                    if item_number:
+                        # Clear temporary BOM items from session
+                        session['temp_bom_items'] = []
+                        flash(f"Assembly '{description}' added successfully with {len(formatted_bom)} components!", "success")
+                        success = True
+                    else:
+                        flash(f"Error adding Assembly '{description}'. Please check logs for details.", "error")
+                        success = False
+                else:
+                    success = False
+
+                if success:
+                    flash(f"{item_type} '{description}' added successfully!", "success")
+                else:
+                    flash(f"Error adding {item_type} '{description}'. Please check inputs and try again.", "error")
+                active_tab = 'add'
+
             # Search components for BOM
-            if 'search_components' in request.form and item_type_selected == 'Assembly':
+            elif 'search_components' in request.form and item_type_selected == 'Assembly':
                 search_term = request.form.get('component_search', '')
                 type_filter = request.form.get('component_type_filter', 'All')
                 available_components = db.get_available_components(search_term, None, type_filter)
@@ -107,7 +206,7 @@ def pdm():
                 form_description = description
                 active_tab = 'add'
 
-            # Update component quantity
+            # Update component quantity - only process when explicitly called
             elif 'update_qty' in request.form and item_type_selected == 'Assembly':
                 line_number = int(request.form.get('line_number', 0))
                 component_qty = int(request.form.get('component_qty', 1))
@@ -140,52 +239,6 @@ def pdm():
                     items.append(item_dict)
                 active_tab = 'search'
                 search_performed = True
-
-            elif 'additemform' in request.form:
-                item_type = request.form.get("item_type")
-                description = request.form.get("description")
-                revision = request.form.get("revision", "1")
-
-                if item_type == 'Manufactured Part':
-                    material = request.form.get("material")
-                    success = db.add_manufactured_part(description, revision, username, material)
-                elif item_type == 'Fixed Part':
-                    vendor = request.form.get("vendor")
-                    vendor_part_number = request.form.get("vendor_part_number")
-                    success = db.add_fixed_part(description, revision, username,
-                                                vendor, vendor_part_number)
-                elif item_type == 'Assembly':
-                    # Get BOM items from session
-                    bom_items = session.get('temp_bom_items', [])
-
-                    # Create a formatted list of BOM items for the database
-                    formatted_bom = []
-                    for item in bom_items:
-                        formatted_bom.append({
-                            'component_item_number': item['item_number'],
-                            'quantity': item['quantity'],
-                            'line_number': item['line_number']
-                        })
-
-                    # Add the assembly with BOM items
-                    item_number = db.add_assembly(description, revision, username, formatted_bom)
-
-                    if item_number:
-                        # Clear temporary BOM items from session
-                        session['temp_bom_items'] = []
-                        flash(f"Assembly '{description}' added successfully with {len(formatted_bom)} components!", "success")
-                        success = True
-                    else:
-                        flash(f"Error adding Assembly '{description}'. Please check logs for details.", "error")
-                        success = False
-                else:
-                    success = False
-
-                if success:
-                    flash(f"{item_type} '{description}' added successfully!", "success")
-                else:
-                    flash(f"Error adding {item_type} '{description}'. Please check inputs and try again.", "error")
-                active_tab = 'add'
 
             # If item type changed, clear temp BOM items
             if 'item_type' in request.form and request.form.get('item_type') != 'Assembly':

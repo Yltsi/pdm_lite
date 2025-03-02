@@ -11,7 +11,7 @@ from werkzeug.security import generate_password_hash
 # Configuration
 DB_FILE = "database.db"
 NUM_USERS = 10
-NUM_MANUFACTURED_PARTS = 500
+NUM_MANUFACTURED_PARTS = 10**3
 NUM_FIXED_PARTS = 500
 NUM_ASSEMBLIES = 100
 MAX_COMPONENTS_PER_ASSEMBLY = 20

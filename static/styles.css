@@ -283,3 +283,9 @@ tr:hover {
 .primary-button:hover {
     background-color: #003da1;
 }
+
+.validation-error {
+    color: #d9534f;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
