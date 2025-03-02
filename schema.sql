@@ -62,3 +62,9 @@ CREATE TABLE IF NOT EXISTS item_revisions (
     vendor_part_number TEXT,
     FOREIGN KEY (item_number) REFERENCES items(item_number)
 );
+
+CREATE INDEX IF NOT EXISTS idx_items_type ON items(item_type);
+CREATE INDEX IF NOT EXISTS idx_items_creator ON items(creator);
+CREATE INDEX IF NOT EXISTS idx_assemblies_component ON assemblies(component_item_number);
+CREATE INDEX IF NOT EXISTS idx_manufactured_parts_material ON manufactured_parts(material);
+CREATE INDEX IF NOT EXISTS idx_fixed_parts_vendor ON fixed_parts(vendor);

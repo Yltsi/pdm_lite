@@ -14,3 +14,4 @@ geckodriver*
 selenium-screenshot*
 .coverage
 database.db
+performance_results.txt
