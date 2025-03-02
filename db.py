@@ -423,36 +423,36 @@ def delete_item_by_number(item_number):
     retries = 0
     max_retries = 5
     retry_delay = 0.5
-    
+
     while retries < max_retries:
         try:
             # Get a fresh connection
             con = get_connection()
-            
+
             # Begin transaction
             con.execute('BEGIN TRANSACTION')
-            
+
             # First check if item exists
             cursor = con.cursor()
             cursor.execute("SELECT item_type FROM items WHERE item_number = ?", (item_number,))
             item = cursor.fetchone()
-            
+
             if not item:
                 # Item doesn't exist, nothing to delete
                 if con:
                     con.rollback()
                     con.close()
                 return True
-                
+
             # Check if this is an assembly and delete BOM entries first
             item_type = item['item_type']
             if item_type == 'Assembly':
                 cursor.execute("DELETE FROM assemblies WHERE assembly_item_number = ?", (item_number,))
-            
+
             # Check if this item is used in any assemblies
             cursor.execute("SELECT COUNT(*) as count FROM assemblies WHERE component_item_number = ?", (item_number,))
             result = cursor.fetchone()
-            
+
             if result and result['count'] > 0:
                 # Item is used in assemblies, can't delete
                 if con:
@@ -460,24 +460,24 @@ def delete_item_by_number(item_number):
                     con.close()
                 print(f"Cannot delete item {item_number}: used in {result['count']} assemblies")
                 return False
-            
+
             # Delete type-specific details
             if item_type == 'Manufactured Part':
                 cursor.execute("DELETE FROM manufactured_parts WHERE item_number = ?", (item_number,))
             elif item_type == 'Fixed Part':
                 cursor.execute("DELETE FROM fixed_parts WHERE item_number = ?", (item_number,))
-            
+
             # Delete revision history
             cursor.execute("DELETE FROM item_revisions WHERE item_number = ?", (item_number,))
-            
+
             # Finally delete from items table
             cursor.execute("DELETE FROM items WHERE item_number = ?", (item_number,))
-            
+
             # Commit the transaction
             con.commit()
             print(f"Successfully deleted item {item_number}")
             return True
-            
+
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e):
                 retries += 1
@@ -511,7 +511,7 @@ def delete_item_by_number(item_number):
                 except:
                     pass
             return False
-            
+
     # If we got here, all retries failed
     print(f"Failed to delete item {item_number} after {max_retries} retries due to database locks")
     return False

@@ -346,17 +346,17 @@ def update_item(item_number):
     """Updates an item in the database."""
     if "username" in session:
         username = session["username"]
-        
+
         # Get the current item
         item = db.get_item_by_number(item_number)
         if not item:
             flash("Item not found", "error")
             return redirect("/pdm")
-        
+
         item_type = item["item_type"]
         current_revision = item["revision"]
         description = request.form.get("description", item["description"])
-        
+
         # Handle standard item update or assembly update with "Update Item" button
         if "update_item" in request.form:
             try:
@@ -380,19 +380,19 @@ def update_item(item_number):
                     component_ids = request.form.getlist('bom_component_ids[]')
                     quantities = request.form.getlist('bom_quantities[]')
                     remove_lines = request.form.getlist('remove_component_lines[]')
-                    
+
                     # Get existing BOM items from session
                     existing_bom = session.get('temp_edit_bom', [])
-                    
+
                     # Create updated BOM list (excluding removed lines)
                     updated_bom = []
                     for i in range(len(line_numbers)):
                         line_number = line_numbers[i]
-                        
+
                         # Skip if this line was marked for removal
                         if line_number in remove_lines:
                             continue
-                            
+
                         # Find component details from the session data
                         for item in existing_bom:
                             if str(item['line_number']) == line_number:
@@ -404,16 +404,16 @@ def update_item(item_number):
                                     'item_type': item.get('item_type', 'Unknown')
                                 })
                                 break
-                    
+
                     try:
                         # Use transaction-safe BOM update
                         success = db.update_assembly_bom(item_number, updated_bom, str(new_revision))
-                        
+
                         if success:
                             # Clear session BOM data
                             session.pop('temp_edit_bom', None)
                             session.pop('temp_edit_item_number', None)
-                            
+
                             flash(f"Assembly BOM updated successfully with {len(updated_bom)} components", "success")
                         else:
                             flash("Error updating assembly BOM. Please try again.", "error")
@@ -421,13 +421,13 @@ def update_item(item_number):
                     except Exception as e:
                         flash(f"Error updating assembly BOM: {str(e)}", "error")
                         return redirect(f"/edit_item/{item_number}")
-                
+
                 flash(f"{item_type} \"{description}\" (Item Number: {item_number}) updated to revision {new_revision}!", "success")
                 return redirect("/pdm")
             else:
                 flash("Error updating item base information. Please check logs.", "error")
                 return redirect(f"/edit_item/{item_number}")
-        
+
         # Handle BOM session manipulation for Assembly items
         elif item_type == "Assembly":
             temp_bom = session.get('temp_edit_bom', [])
@@ -438,15 +438,15 @@ def update_item(item_number):
                 "bom_items": temp_bom,
                 "available_components": []
             }
-            
+
             # Add component to temp BOM
             if "add_component" in request.form:
                 component_id = request.form.get("add_component_id")
-                
+
                 if component_id:
                     component_id = int(component_id)
                     component_qty = int(request.form.get(f"add_qty_{component_id}", 1))
-                    
+
                     # Check for circular reference
                     if db.check_circular_reference(item_number, component_id):
                         flash(f"Cannot add component {component_id} - would create circular reference", "error")
@@ -458,7 +458,7 @@ def update_item(item_number):
                                 exists = True
                                 flash(f"Component {component_id} already exists in the BOM", "error")
                                 break
-                        
+
                         if not exists:
                             # Get component details
                             component = db.get_item_by_number(component_id)
@@ -467,7 +467,7 @@ def update_item(item_number):
                                 line_number = 10
                                 if temp_bom:
                                     line_number = max([item['line_number'] for item in temp_bom]) + 10
-                                
+
                                 # Add to temp BOM
                                 temp_bom.append({
                                     'line_number': line_number,
@@ -478,24 +478,24 @@ def update_item(item_number):
                                 })
                                 session['temp_edit_bom'] = temp_bom
                                 flash(f"Component {component_id} added to BOM (will be saved when you click 'Update Item')", "success")
-                
+
                 # Keep search results
                 search_term = request.form.get("component_search", "")
                 type_filter = request.form.get("component_type_filter", "All")
                 template_context["available_components"] = db.get_available_components(search_term, item_number, type_filter)
                 template_context["bom_items"] = temp_bom
-                
+
                 return render_template("edit_item.html", **template_context)
-            
+
             # Component search
             elif "search_components" in request.form:
                 search_term = request.form.get("component_search", "")
                 type_filter = request.form.get("component_type_filter", "All")
                 template_context["available_components"] = db.get_available_components(search_term, item_number, type_filter)
                 template_context["bom_items"] = temp_bom
-                
+
                 return render_template("edit_item.html", **template_context)
-        
+
         # If we got here without returning, something unexpected happened
         flash("Invalid operation. Please try again.", "error")
         return redirect(f"/edit_item/{item_number}")
@@ -505,24 +505,24 @@ def delete_item(item_number):
     """Deletes an item from the database."""
     if "username" not in session:
         return redirect("/")
-    
+
     try:
         item = db.get_item_by_number(item_number)
         if not item:
             flash(f"Item Number {item_number} not found", "error")
             return redirect("/pdm")
-        
+
         # Check if the item is used in any assemblies
         con = db.get_connection()
         cursor = con.cursor()
         cursor.execute("SELECT COUNT(*) as count FROM assemblies WHERE component_item_number = ?", (item_number,))
         result = cursor.fetchone()
         con.close()
-        
+
         if result and result['count'] > 0:
             flash(f"Cannot delete Item Number {item_number} because it is used in {result['count']} assemblies. Remove it from all assemblies first.", "error")
             return redirect("/pdm")
-        
+
         # Attempt to delete the item
         if db.delete_item_by_number(item_number):
             flash(f"Item Number {item_number} deleted successfully!", "success")
@@ -530,7 +530,7 @@ def delete_item(item_number):
             flash(f"Error deleting Item Number {item_number}. It may be referenced by other items or the database is busy.", "error")
     except Exception as e:
         flash(f"Error during item deletion: {str(e)}", "error")
-        
+
     return redirect("/pdm")
 
 def user_page():
