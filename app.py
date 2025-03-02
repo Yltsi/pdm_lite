@@ -22,5 +22,8 @@ app.add_url_rule('/delete_item/<int:item_number>', 'delete_item', items.delete_i
 app.add_url_rule('/user_page', 'user_page', items.user_page)
 app.add_url_rule('/item_details/<int:item_number>', 'item_details', items.item_details)
 
+# Statistics
+app.add_url_rule('/statistics', 'statistics', items.statistics)
+
 if __name__ == "__main__":
     app.run(debug=True)

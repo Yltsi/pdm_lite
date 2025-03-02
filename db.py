@@ -1,7 +1,6 @@
 """Database functions for the inventory management system."""
 import sqlite3
 import time
-import logging
 from flask import g
 
 def get_connection():
@@ -668,3 +667,204 @@ def get_assembly_bom_with_retry(assembly_item_number, max_retries=5, retry_delay
     # If we got here, all retries failed
     print(f"Failed to get assembly BOM after {max_retries} retries: {last_error}")
     raise last_error
+
+# Staticstic data
+
+def get_item_usage_statistics():
+    """Returns aggregate statistics about item usage in assemblies."""
+    sql = """
+    SELECT 
+        i.item_type,
+        COUNT(DISTINCT i.item_number) as total_items,
+        COUNT(DISTINCT a.assembly_item_number) as used_in_assemblies,
+        AVG(a.quantity) as avg_quantity_per_usage
+    FROM 
+        items i
+    LEFT JOIN 
+        assemblies a ON i.item_number = a.component_item_number
+    GROUP BY 
+        i.item_type
+    """
+    return query(sql)
+
+def get_most_used_components(limit=10):
+    """Returns the most frequently used components across all assemblies."""
+    sql = """
+    SELECT 
+        i.item_number,
+        i.description,
+        i.item_type,
+        COUNT(a.assembly_item_number) as assembly_count,
+        SUM(a.quantity) as total_quantity
+    FROM 
+        items i
+    JOIN 
+        assemblies a ON i.item_number = a.component_item_number
+    GROUP BY 
+        i.item_number
+    ORDER BY 
+        assembly_count DESC, total_quantity DESC
+    LIMIT ?
+    """
+    return query(sql, [limit])
+
+def get_largest_assemblies(limit=5):
+    """Returns assemblies with the most components."""
+    sql = """
+    SELECT 
+        i.item_number,
+        i.description,
+        COUNT(a.component_item_number) as component_count,
+        SUM(a.quantity) as total_parts
+    FROM 
+        items i
+    JOIN 
+        assemblies a ON i.item_number = a.assembly_item_number
+    GROUP BY 
+        i.item_number
+    ORDER BY 
+        component_count DESC, total_parts DESC
+    LIMIT ?
+    """
+    return query(sql, [limit])
+
+def get_item_revisions_with_changes(item_number):
+    """Returns revision history with details of changes."""
+    sql = """
+    SELECT 
+        ir.id,
+        ir.revision_number,
+        ir.revision_date,
+        ir.revisioner,
+        ir.description,
+        ir.material,
+        ir.vendor,
+        ir.vendor_part_number,
+        (SELECT COUNT(*) FROM assemblies WHERE assembly_item_number = ? AND revision = ir.revision_number) as bom_component_count
+    FROM 
+        item_revisions ir
+    WHERE 
+        ir.item_number = ?
+    ORDER BY 
+        ir.revision_date DESC
+    """
+    return query(sql, [item_number, item_number])
+
+def get_items_without_usage():
+    """ Returns items that are not used in any assembly."""
+    sql = """
+    SELECT 
+        i.item_number,
+        i.item_type,
+        i.description,
+        i.revision,
+        i.creation_date,
+        i.creator
+    FROM 
+        items i
+    LEFT JOIN 
+        assemblies a ON i.item_number = a.component_item_number
+    WHERE 
+        a.component_item_number IS NULL
+    ORDER BY 
+        i.item_number
+    """
+    return query(sql)
+
+def get_user_contribution_stats():
+    """Returns statistics about user contributions."""
+    sql = """
+    SELECT 
+        creator as username,
+        COUNT(DISTINCT item_number) as created_items,
+        COUNT(DISTINCT CASE WHEN item_type = 'Assembly' THEN item_number ELSE NULL END) as assemblies,
+        COUNT(DISTINCT CASE WHEN item_type = 'Manufactured Part' THEN item_number ELSE NULL END) as manufactured_parts,
+        COUNT(DISTINCT CASE WHEN item_type = 'Fixed Part' THEN item_number ELSE NULL END) as fixed_parts
+    FROM 
+        items
+    GROUP BY 
+        creator
+    ORDER BY 
+        created_items DESC
+    """
+    return query(sql)
+
+def get_complex_assembly_tree(assembly_item_number, max_depth=5):
+    """Returns a hierarchical representation of an assembly and its subassemblies."""
+    try:
+        # Try to use recursive CTE if supported
+        sql = """
+        WITH RECURSIVE assembly_tree AS (
+            -- Base case: direct components of the assembly
+            SELECT 
+                a.assembly_item_number,
+                a.component_item_number,
+                a.quantity,
+                a.line_number,
+                i.item_type,
+                i.description,
+                1 as depth
+            FROM 
+                assemblies a
+            JOIN 
+                items i ON a.component_item_number = i.item_number
+            WHERE 
+                a.assembly_item_number = ?
+            
+            UNION ALL
+            
+            -- Recursive case: components of subassemblies
+            SELECT 
+                a.assembly_item_number,
+                a.component_item_number,
+                a.quantity,
+                a.line_number,
+                i.item_type,
+                i.description,
+                at.depth + 1
+            FROM 
+                assemblies a
+            JOIN 
+                items i ON a.component_item_number = i.item_number
+            JOIN 
+                assembly_tree at ON at.component_item_number = a.assembly_item_number
+            WHERE 
+                at.depth < ?
+        )
+        SELECT 
+            assembly_item_number,
+            component_item_number,
+            quantity,
+            line_number,
+            item_type,
+            description,
+            depth
+        FROM 
+            assembly_tree
+        ORDER BY 
+            depth, line_number
+        """
+        return query(sql, [assembly_item_number, max_depth])
+    except Exception as e:
+        # If recursive CTE is not supported, fall back to basic query
+        print(f"Recursive query not supported: {e}")
+        sql = """
+        SELECT 
+            a.assembly_item_number,
+            a.component_item_number,
+            a.quantity,
+            a.line_number,
+            i.item_type,
+            i.description,
+            1 as depth
+        FROM 
+            assemblies a
+        JOIN 
+            items i ON a.component_item_number = i.item_number
+        WHERE 
+            a.assembly_item_number = ?
+        ORDER BY 
+            a.line_number
+        """
+        return query(sql, [assembly_item_number])
+    

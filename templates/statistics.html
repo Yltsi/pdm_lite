@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PDM Lite - Statistics</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="banner">
+        <img src="{{ url_for('static', filename='banner.png') }}" alt="PDM Lite Banner">
+        <h1>PDM Lite - System Statistics</h1>
+        <p>User: {{ username }}</p>
+        <p><a href="/pdm">Back to PDM</a> | <a href="/user_page">User Page</a> | <a href="/logout">Logout</a></p>
+    </div>
+
+    <div class="stats-container">
+        <h2>Item Usage Statistics</h2>
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>Item Type</th>
+                    <th>Total Items</th>
+                    <th>Used in Assemblies</th>
+                    <th>Average Quantity per Usage</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for stat in item_stats %}
+                <tr>
+                    <td>{{ stat.item_type }}</td>
+                    <td>{{ stat.total_items }}</td>
+                    <td>{{ stat.used_in_assemblies }}</td>
+                    <td>{{ stat.avg_quantity_per_usage|round(2) if stat.avg_quantity_per_usage else 'N/A' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2>Most Used Components</h2>
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>Item Number</th>
+                    <th>Description</th>
+                    <th>Item Type</th>
+                    <th>Used in # Assemblies</th>
+                    <th>Total Quantity</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in most_used %}
+                <tr>
+                    <td><a href="/item_details/{{ item.item_number }}">{{ item.item_number }}</a></td>
+                    <td>{{ item.description }}</td>
+                    <td>{{ item.item_type }}</td>
+                    <td>{{ item.assembly_count }}</td>
+                    <td>{{ item.total_quantity }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2>Largest Assemblies</h2>
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>Assembly Number</th>
+                    <th>Description</th>
+                    <th>Component Count</th>
+                    <th>Total Parts</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for assembly in largest_assemblies %}
+                <tr>
+                    <td><a href="/item_details/{{ assembly.item_number }}">{{ assembly.item_number }}</a></td>
+                    <td>{{ assembly.description }}</td>
+                    <td>{{ assembly.component_count }}</td>
+                    <td>{{ assembly.total_parts }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2>User Contribution Statistics</h2>
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Total Items</th>
+                    <th>Assemblies</th>
+                    <th>Manufactured Parts</th>
+                    <th>Fixed Parts</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for stat in user_stats %}
+                <tr>
+                    <td>{{ stat.username }}</td>
+                    <td>{{ stat.created_items }}</td>
+                    <td>{{ stat.assemblies }}</td>
+                    <td>{{ stat.manufactured_parts }}</td>
+                    <td>{{ stat.fixed_parts }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

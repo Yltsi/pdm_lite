@@ -9,7 +9,7 @@
         <img src="{{ url_for('static', filename='banner.png') }}" alt="PDM Lite Banner">
         <h1>PDM Lite</h1>
         <p>User: {{ session.username }}</p>
-        <p><a href="/user_page">User Page</a> | <a href="/logout">Logout</a></p>
+        <p><a href="/user_page">User Page</a> | <a href="/statistics">Statistics</a> | <a href="/logout">Logout</a></p>
     </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
