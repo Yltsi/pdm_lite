@@ -52,6 +52,7 @@
     <h2>Edit Item #{{ item.item_number }}</h2>
 
     <form id="edititemform" action="/update_item/{{ item.item_number }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <div class="item-info">
             <label>Item Type:</label>
             <span>{{ item.item_type }}</span>

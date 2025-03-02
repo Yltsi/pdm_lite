@@ -1,6 +1,7 @@
 """Item management functions for PDM Lite."""
 from flask import render_template, request, session, redirect, flash
 import db
+from utils import check_csrf
 
 def pdm():
     """Product Data Management page."""
@@ -230,7 +231,7 @@ def add_item():
     """Adds a new item to the database."""
     if "username" not in session:
         return redirect("/")
-
+    check_csrf()
     if request.method == "POST":
         username = session["username"]
         item_type = request.form["item_type"]
@@ -278,6 +279,7 @@ def add_item():
 def search_items():
     """Searches the items database for items matching the search criteria."""
     if "username" in session:
+        check_csrf()
         search_description = request.form.get("search_description", "")
         item_filter = request.form.get("item_filter", "All")
         search_results = db.search_items_db(search_description, item_filter)
@@ -339,12 +341,14 @@ def edit_item(item_number):
                               manufactured_part=manufactured_part,
                               fixed_part=fixed_part,
                               bom_items=bom_items,
-                              available_components=available_components)
+                              available_components=available_components,
+                              csrf_token=session.get("csrf_token"))
     return redirect("/")
 
 def update_item(item_number):
     """Updates an item in the database."""
     if "username" in session:
+        check_csrf()
         username = session["username"]
 
         # Get the current item
@@ -505,7 +509,7 @@ def delete_item(item_number):
     """Deletes an item from the database."""
     if "username" not in session:
         return redirect("/")
-
+    check_csrf()
     try:
         item = db.get_item_by_number(item_number)
         if not item:
@@ -648,7 +652,6 @@ def statistics():
     """Display overall PDM statistics"""
     if "username" not in session:
         return redirect("/")
-
     # Get overall item statistics
     item_stats = db.get_item_usage_statistics()
 

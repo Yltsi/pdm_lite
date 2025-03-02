@@ -23,7 +23,10 @@
     </p>
   </div>
   {% else %}
-    <div class="login-form">  
+    <div class="login-form">
+      {% if session.csrf_token %}
+      <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+      {% endif %}
     <form action="/register" method="post">
       {% if error_message %}
       <div class="error-message">

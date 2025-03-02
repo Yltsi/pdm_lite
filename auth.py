@@ -3,6 +3,8 @@ import sqlite3
 from flask import render_template, request, session, redirect
 from werkzeug.security import check_password_hash, generate_password_hash
 import db
+import secrets
+from utils import check_csrf
 
 def index():
     """Displays the login page and handles the login logic."""
@@ -21,6 +23,7 @@ def index():
             password_hash = password_hash[0][0]
             if check_password_hash(password_hash, password):
                 session["username"] = username
+                session["csrf_token"] = secrets.token_hex(16)
                 return redirect("/pdm")
             error_message = "Invalid username or password"
     elif "username" in session:
@@ -36,6 +39,8 @@ def logout():
 def register():
     """Registers a new user."""
     if request.method == "POST":
+        if "username" in session:
+            check_csrf()
         username = request.form["username"]
         password1 = request.form["password1"]
         password2 = request.form["password2"]

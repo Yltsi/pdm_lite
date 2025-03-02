@@ -1,5 +1,5 @@
 """Main application entry point for PDM Lite."""
-from flask import Flask
+from flask import Flask, render_template
 import config
 import auth
 import items
@@ -24,6 +24,12 @@ app.add_url_rule('/item_details/<int:item_number>', 'item_details', items.item_d
 
 # Statistics
 app.add_url_rule('/statistics', 'statistics', items.statistics)
+
+# Error handlers
+@app.errorhandler(403)
+def forbidden(e):
+    """Render a 403 error page."""
+    return render_template("403.html"), 403
 
 if __name__ == "__main__":
     app.run(debug=True)
