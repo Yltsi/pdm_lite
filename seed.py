@@ -12,7 +12,7 @@ from werkzeug.security import generate_password_hash
 DB_FILE = "database.db"
 NUM_USERS = 10
 NUM_MANUFACTURED_PARTS = 500
-NUM_FIXED_PARTS = 500 
+NUM_FIXED_PARTS = 500
 NUM_ASSEMBLIES = 100
 MAX_COMPONENTS_PER_ASSEMBLY = 20
 
@@ -24,17 +24,17 @@ MATERIALS = [
     "Steel", "Aluminum", "Copper", "Brass", "Titanium", "Stainless Steel", "Bronze", 
     "Cast Iron", "Zinc", "Nickel", "Tungsten", "Chrome", "Lead", "Tin", "Gold", "Silver", 
     "Platinum", "Magnesium", "Cobalt", "Molybdenum", "Beryllium", "Inconel", "Monel",
-    
+
     # Plastics/Polymers
     "PVC", "ABS", "Polypropylene", "Polyethylene", "Acrylic", "Nylon", "Teflon", "PEEK",
     "Polycarbonate", "Polystyrene", "Silicone", "Delrin", "UHMW", "PTFE", "PET", "HDPE",
     "LDPE", "Polylactic Acid", "Epoxy Resin", "Acetal", "Phenolic", "Bakelite",
-    
+
     # Other Materials
     "Rubber", "Carbon Fiber", "Fiberglass", "Ceramic", "Glass", "Wood", "Plywood",
     "MDF", "Particleboard", "Leather", "Foam", "Cork", "Graphite", "Diamond", "Concrete", 
     "Marble", "Granite", "Slate", "Sandstone", "Composite", "Kevlar", "Nomex",
-    
+
     # Advanced Materials
     "Carbon Nanotube Composite", "Shape Memory Alloy", "High-Temperature Ceramic", 
     "Tungsten Carbide", "Boron Nitride", "Silicon Carbide", "Aerogel", "Metal Matrix Composite",

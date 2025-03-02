@@ -1,9 +1,10 @@
 """Main application entry point for PDM Lite."""
+import time
 from flask import Flask, render_template, g
 import config
 import auth
 import items
-import time
+import views
 
 app = Flask(__name__)
 app.secret_key = config.secret_key
@@ -20,11 +21,11 @@ app.add_url_rule('/search_items', 'search_items', items.search_items, methods=["
 app.add_url_rule('/edit_item/<int:item_number>', 'edit_item', items.edit_item)
 app.add_url_rule('/update_item/<int:item_number>', 'update_item', items.update_item, methods=["POST"])
 app.add_url_rule('/delete_item/<int:item_number>', 'delete_item', items.delete_item, methods=["POST"])
-app.add_url_rule('/user_page', 'user_page', items.user_page)
-app.add_url_rule('/item_details/<int:item_number>', 'item_details', items.item_details)
+app.add_url_rule('/user_page', 'user_page', views.user_page)
+app.add_url_rule('/item_details/<int:item_number>', 'item_details', views.item_details)
 
 # Statistics
-app.add_url_rule('/statistics', 'statistics', items.statistics)
+app.add_url_rule('/statistics', 'statistics', views.statistics)
 
 # Error handlers
 @app.errorhandler(403)
